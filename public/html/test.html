@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Crosswire</title>
+    <link rel="stylesheet" href="/css/style.css">
+  </head>
+  <body>
+    <section id="header">
+      <h2>CrossWire</h2>
+    </section>
+    <section id="body">
+      <h3>Connect Test</h3>
+      <form id="register">
+        <input id="register-username" type="text" placeholder="Username">
+        <input id="register-password" type="text" placeholder="Password">
+        <button id="register-button">Register</button>
+      </form>
+      <form id="login">
+        <input id="login-username" type="text" placeholder="Username">
+        <input id="login-password" type="text" placeholder="Password">
+        <button id="login-button">Login</button>
+      </form>
+      <button id="hi">Say Hello</button>
+      <form id="add-friend">
+        <input id="friend-name" type="text" placeholder="Friend Name">
+        <button id="add-friend-button">Add Friend</button>
+      </form>
+      <form id="remove-friend">
+        <input id="friend-to-remove" type="text" placeholder="Friend Name">
+        <button id="remove-friend-button">Remove Friends</button>
+      </form>
+      <div id="token-display">
+        <h3>token</h3>
+        <p id="token"></p>
+      </div>
+    </section>
+    <section id="footer"></section>
+    <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script src="js/index.min.js"></script>
+  </body>
+</html>

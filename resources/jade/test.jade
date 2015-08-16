@@ -1,0 +1,34 @@
+doctype html
+html
+   head
+      title Crosswire
+      link(rel='stylesheet', href='/css/style.css')
+   body
+      section#header
+        h2 CrossWire
+      section#body
+        h3 Connect Test
+        form#register
+          input#register-username(type="text" placeholder="Username")
+          input#register-password(type="text" placeholder="Password")
+          button#register-button Register
+        form#login
+          input#login-username(type="text" placeholder="Username")
+          input#login-password(type="text" placeholder="Password")
+          button#login-button Login
+        button#hi Say Hello
+        form#add-friend
+          input#friend-name(type="text" placeholder="Friend Name")
+          button#add-friend-button Add Friend
+        form#remove-friend
+          input#friend-to-remove(type="text" placeholder="Friend Name")
+          button#remove-friend-button Remove Friends
+        div#token-display
+          h3 token
+          p#token
+
+      section#footer
+      script(src='https://cdn.socket.io/socket.io-1.3.5.js' )
+      script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js')
+      script(src='js/index.min.js')
+      
