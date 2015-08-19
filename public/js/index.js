@@ -404,6 +404,12 @@ angular.module('index', [])
       playlistSocket.emit('change', data);
     };
 
+    actions.register = function register(username, password) {
+      var data = {token: $scope.token, username: username, password: password};
+      userSocket.emit('register', data);
+
+    };
+
     actions.login = function login(username, password) {
       var data = {token: $scope.token, username: username, password: password};
       userSocket.emit('authenticate', data);
