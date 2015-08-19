@@ -73,4 +73,4 @@ require('./socket/namespaces/user.js')(io);
 var httpsServer = https.createServer(options, app);
 io.listen(httpsServer);
 //================================START=SERVER==================================
-httpsServer.listen(port);
+httpsServer.listen(3000);
