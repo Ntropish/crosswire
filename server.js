@@ -20,7 +20,7 @@ var port = process.env.PORT || 8080;
 var path =       require('path');
 var morgan =     require('morgan');
 var bodyParser = require('body-parser');
-var https =      require('https');
+var http =      require('http');
 var express =    require('express');
 var io =         require('socket.io')();
 var mongoose =   require('mongoose');
@@ -57,20 +57,13 @@ app.get('/', function(req, res){
 //==============================================================================
 //================================CONFIGURE=SOCKET.IO===========================
 //==============================================================================
-/*
-io.use(ioWildcard());
 
-io.use(function(socket, next){
-  require('./socket/authenticate-token.js')(socket);
-  next();
-});
-*/
 require('./socket/namespaces/playlist.js')(io);
 require('./socket/namespaces/user.js')(io);
 
 //==============================================================================
 //================================MAKE=SERVER===================================
-var httpsServer = https.createServer(options, app);
+var httpsServer = http.createServer(app); //OPTIONS HERE
 io.listen(httpsServer);
 //================================START=SERVER==================================
 httpsServer.listen(port);
