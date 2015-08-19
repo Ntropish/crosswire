@@ -30,7 +30,7 @@ var ioWildcard = require('socketio-wildcard');
 //================================MISC=CONFIG===================================
 
 //require('./config')();
-mongoose.connect(process.env.MONGOOSE_URI);
+mongoose.connect(process.env.MONGOLAB_URI);
 
 // ===============================MODELS========================================
 require('./models/playlist.js')(mongoose);
