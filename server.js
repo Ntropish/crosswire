@@ -29,8 +29,8 @@ var ioWildcard = require('socketio-wildcard');
 
 //================================MISC=CONFIG===================================
 
-require('./config')();
-mongoose.connect(process.env.dbpath);
+//require('./config')();
+mongoose.connect(process.env.MONGOOSE_URI);
 
 // ===============================MODELS========================================
 require('./models/playlist.js')(mongoose);
@@ -47,7 +47,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 // Serve SPA
-app.get('/', function(req, res){  
+app.get('/', function(req, res){
   //res.send('index');
   res.sendFile('index.html', {root: path.join(__dirname, 'public', 'html')});
 });
@@ -73,4 +73,4 @@ require('./socket/namespaces/user.js')(io);
 var httpsServer = https.createServer(options, app);
 io.listen(httpsServer);
 //================================START=SERVER==================================
-httpsServer.listen(3000);
+httpsServer.listen(port);

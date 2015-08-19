@@ -1,17 +1,83 @@
 doctype html
 html
-   head
-      title Crosswire
-      link(rel='stylesheet', href='/css/style.css')
-   body
-      section#header
-        h2 CrossWire
-      section#body
+ head
+  title crosswire
+  link(rel='stylesheet', href='/css/style.css')
+  link(href='https://fonts.googleapis.com/css?family=Sarala:400,700' rel='stylesheet' type='text/css')
+  link(rel='stylesheet' type='text/css' href='https://fonts.googleapis.com/css?family=Open+Sans:400,300')
+  link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css")
+ body
+  div#container(ng-app="index" ng-controller="SongShareCtrl as controller")
+  
+    div#user(ng-show="showUserBox")
+      h2 {{ loggedInUsername }}
+      div#login-and-registration(ng-show="!token")
+        div#login-and-registration-tabs
+          button#login-tab(ng-click="activeTab = 0" ng-class="{'active-tab': activeTab == '0'}") Login
+          button#register-tab(ng-click="activeTab = 1" ng-class="{'active-tab': activeTab == '1'}") Register
+        input.login-input(type="text" ng-model="username" placeholder="Username")
+        input.login-input(type="password" ng-model="password" placeholder="Password")
+        input.login-input(type="password" 
+          ng-model="confirmPassword" 
+          placeholder="Confirm" 
+          ng-show="activeTab === 1")
+        div#login-and-registration-buttons
+          button#login-button(ng-click="actions.login(username, password)" ng-show="activeTab === 0") Login
+          button#register-button(ng-click="actions.login(username, password)" ng-show="activeTab === 1") Register
+      div#friend-adder(ng-show="token")
+        input(type="text" ng-model="friendName" placeholder="Name")
+        button(ng-click="actions.addFriend(friendName)") Add Friend
+      button#make-room(ng-click="actions.join(loggedInUsername)" ng-show="token") Join Your Room
+  
+    section#header
+      h2 
+        strong cross
+        | wire
+      div#room-joiner
+        input(type="text" ng-model="desiredRoom" placeholder="Room")
+        button(ng-click="actions.join(desiredRoom)") Join Room
+      button#you-button(ng-click="showUserBox = !showUserBox" class="glow") You
 
+    section#body
+      div#media-controller(ng-show="room")
+        button(ng-click="actions.playPause(true)") 
+          i(class="fa fa-play")
+        button(ng-click="actions.playPause(false)")
+          i(class="fa fa-pause")
+        button(ng-click="actions.change(nowPlaying - 1)")
+          i(class="fa fa-step-backward")
+        button(ng-click="actions.change(nowPlaying + 1)")
+          i(class="fa fa-step-forward")
+      div#list-player-holder(ng-show="room")
+        div#song-list
+          div#song-adder
+            input(type="text" ng-model="urlToAdd" placeholder="URL")
+            button(ng-click="actions.add(urlToAdd)") Add Song
+          ul#songs
+            li.song-item(ng-repeat="song in list")
+              div.play-symbol
+                i(class="fa fa-play" ng-show="$index === nowPlaying")
+              div.song-name {{ song.url }}
+              button(ng-click="actions.remove($index)") X
+          
+        div#player-container(ng-show="currentSongDomain")
+          iframe#SCwidget(class="iframe"
+                width="100%"
+                height="100%"
+                scrolling="no"
+                frameborder="no"
+                src="https://w.soundcloud.com/player/?url=none")
+              
+      div#landing-message(ng-show="!room")
+        h2 Welcome to crosswire
+        p Sign in to join a playlist or make 
+          | one to share with friends!
 
-      section#footer
-      script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js")
-      script(src='https://cdn.socket.io/socket.io-1.3.5.js' )
-      script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js')
-      script(src='js/index.min.js')
+    section#footer
+    
+    script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js")
+    script(src='https://cdn.socket.io/socket.io-1.3.5.js' )
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js')
+    script(src="https://w.soundcloud.com/player/api.js")
+    script(src='js/index.js')
       

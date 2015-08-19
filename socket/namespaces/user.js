@@ -129,7 +129,6 @@ module.exports = function(io) {
     });
 
     socket.on('authenticate', function(data){
-      console.log('auth');
       // Check for lack of username.
       if (!data.username) {
         socket.emit('authenticate-result', {
@@ -150,13 +149,21 @@ module.exports = function(io) {
       User.findOne({username: data.username}).exec().then(function(user){
         if (user) {
           user.verifyPassword(data.password, function(err, isMatch){
+            if (err) {
+              return socket.emit('authenticate-result', {message: 'Database error.'});
+            }
             if (isMatch) {
+              console.log('signing');
               var token = jwt.sign(
                 {username: user.username},
                 process.env.secret,
                 {expiresInMinutes: 1440}
               );
-              socket.emit('authenticate-result', {success: true, token: token});
+              socket.emit('authenticate-result', {
+                success: true,
+                token: token,
+                username: data.username
+              });
             } else {
               socket.emit('authenticate-result', {
                 success: false,

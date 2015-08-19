@@ -28,7 +28,6 @@ module.exports = function(mongoose) {
         if (!user.isModified('password')) {
             return next();
         }
-        //TODO: Switch to promises
         bcrypt.genSalt(SALT_WORK_FACTOR, function (err, salt) {
             if (err) {
                 return next(err);
@@ -49,7 +48,7 @@ module.exports = function(mongoose) {
             if (err) {
                 return cb(err);
             }
-            cb(null, isMatch); 
+            cb(null, isMatch);
         });
     };
 

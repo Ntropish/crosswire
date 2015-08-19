@@ -10,11 +10,15 @@ var jade        = require('gulp-jade');
 gulp.task('js', function () {
 
     return gulp.src('resources/js/*.js')
+    .pipe(gulp.dest('public/js/'));
+    /*
+    return gulp.src('resources/js/*.js')
         .pipe(uglify())
         .pipe(rename({
             suffix: '.min'
         }))
         .pipe(gulp.dest('public/js/'));
+      */
 });
 
 gulp.task('css', function () {
