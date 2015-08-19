@@ -23,7 +23,7 @@ html
           ng-show="activeTab === 1")
         div#login-and-registration-buttons
           button#login-button(ng-click="actions.login(username, password)" ng-show="activeTab === 0") Login
-          button#register-button(ng-click="actions.login(username, password)" ng-show="activeTab === 1") Register
+          button#register-button(ng-click="actions.register(username, password)" ng-show="activeTab === 1") Register
       div#friend-adder(ng-show="token")
         input(type="text" ng-model="friendName" placeholder="Name")
         button(ng-click="actions.addFriend(friendName)") Add Friend
