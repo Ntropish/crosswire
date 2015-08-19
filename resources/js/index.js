@@ -28,8 +28,8 @@ angular.module('index', [])
     // Object to hold user actions, interface event handlers
     var actions = $scope.actions = {};
 
-    var userSocket = io.connect('https://localhost:3000/user');
-    var playlistSocket = io.connect('https://localhost:3000/playlist');
+    var userSocket = io.connect('user');
+    var playlistSocket = io.connect('playlist');
 
     var timeRequestIgnore = false;
     var firstPlay = true;
