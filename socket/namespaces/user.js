@@ -181,6 +181,7 @@ module.exports = function(io) {
 
     socket.on('add-friend', function(data){
 
+      var results = {};
       [
         // Resolve payload from token
         function() {
@@ -205,13 +206,21 @@ module.exports = function(io) {
           return User.findOne({username: data.friendToBe}).exec()
             .then(function(friend){
               if (friend) {
-                return Promise.resolve({friend: friend, user: user});
+                results = {friend: friend, user: user};
+                return Promise.resolve();
               } else {
                 return Promise.reject('Potential friend not found.');
               }
             }, function(err) {
               return Promise.reject('Database error finding potential friend.');
             });
+        },
+        function() {
+          if (results.user.friends.indexOf(results.friend._id) !== -1) {
+            return Promise.reject('That dude is already your friend.');
+          } else {
+            return Promise.resolve();
+          }
         },
 
         function(data) {
