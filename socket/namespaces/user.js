@@ -233,7 +233,7 @@ module.exports = function(io) {
         }, Promise.resolve())
           .then(function () {
             socket.emit('add-friend-response',
-            {success: true, friend: data.friendToBe}
+            {success: true, friend: data.friendToBe, message: 'Added friend!'}
           );
           }, function (reason) {
             socket.emit('add-friend-response',
