@@ -509,7 +509,6 @@ angular.module('index', [])
 
     actions.updateVolume = function updateVolume() {
       if ($scope.currentSongDomain === 'soundcloud') {
-        console.log('changing:', $scope.volume);
         SCwidget.setVolume($scope.volume / 100);
       }
     };
