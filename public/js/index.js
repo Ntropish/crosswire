@@ -61,6 +61,8 @@ angular.module('index', [])
 
     SCwidget.bind(SC.Widget.Events.PLAY, function(data){
 
+      actions.updateVolume();
+
       // First play will not have synced time, correct it here
       if (firstPlay) {
         SCcorrectTime();
