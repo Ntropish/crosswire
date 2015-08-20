@@ -411,6 +411,7 @@ angular.module('index', [])
     userSocket.on('add-friend-response', function(data) {
       if (data.success) {
         $scope.friends.push(data.friend);
+        displayMessage(data.message);
       } else {
         displayMessage(data.message);
       }

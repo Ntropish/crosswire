@@ -236,6 +236,7 @@ module.exports = function(io) {
             {success: true, friend: data.friendToBe, message: 'Added friend!'}
           );
           }, function (reason) {
+            console.log(reason);
             socket.emit('add-friend-response',
             {success: false, message: reason}
           );
