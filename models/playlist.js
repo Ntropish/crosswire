@@ -7,7 +7,7 @@ module.exports = function (mongoose) {
         // List of song urls and their saved times
         playlist: [{
             url: {type: String, required: true},
-            time: {type: Number, 'default': 0, required: true}
+            title: {type: String, required: true}
         }],
         // Play - true, Pause - false
         isPlaying: {type: Boolean, 'default': false, required: true},

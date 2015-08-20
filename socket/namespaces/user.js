@@ -70,7 +70,7 @@ module.exports = function(io) {
         else if (username.match(/^[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*$/)) {
           return User.findOne({username: username}).exec().then(function(user){
             if (user) {
-              result.message = 'That username is taken';
+              result.message = 'That username is taken.';
               return result;
             }
             result.success = true;
@@ -78,13 +78,13 @@ module.exports = function(io) {
           });
         } else {
           result.message = 'Usernames should only contain letters and numbers '+
-          'and have dots (.) or underscores (_) as separators';
+          'and have dots (.) or underscores (_) as separators.';
           return Promise.resolve(result);
         }
 
       };
 
-      var createUser = function create(username, password) {
+      var createUser = function createUser(username, password) {
         var newUser = new User({username: username, password: password});
         return newUser.save();
       };
@@ -146,7 +146,7 @@ module.exports = function(io) {
         return;
       }
 
-      User.findOne({username: data.username}).exec().then(function(user){
+      User.findOne({username: data.username}).populate('friends').exec().then(function(user){
         if (user) {
           user.verifyPassword(data.password, function(err, isMatch){
             if (err) {
@@ -162,12 +162,14 @@ module.exports = function(io) {
               socket.emit('authenticate-result', {
                 success: true,
                 token: token,
-                username: data.username
+                username: data.username,
+                friends: user.friends.map(function(friend){return friend.username;})
               });
+
             } else {
               socket.emit('authenticate-result', {
                 success: false,
-                message: 'Password doesn\'t match'
+                message: 'That password isn\'t right.'
               });
             }
           });
@@ -222,7 +224,7 @@ module.exports = function(io) {
         }, Promise.resolve())
           .then(function () {
             socket.emit('add-friend-response',
-            {success: true}
+            {success: true, friend: data.friendToBe}
           );
           }, function (reason) {
             socket.emit('add-friend-response',

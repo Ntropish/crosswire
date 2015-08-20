@@ -19,6 +19,40 @@ html {
   width: 100%;
   height: 100%; }
 
+#alert-box.alert-flash {
+  animation: alert-flash 3s; }
+
+@keyframes alert-flash {
+  0% {
+    opacity: 0;
+    background-color: #efefef; }
+  5% {
+    opacity: 1;
+    background-color: #b88; }
+  50% {
+    opacity: 1;
+    background-color: #efefef; }
+  95% {
+    opacity: 1;
+    background-color: #efefef; }
+  100% {
+    opacity: 0;
+    background-color: #efefef; } }
+
+#alert-box {
+  opacity: 0;
+  box-sizing: border-box;
+  width: auto;
+  height: 4em;
+  overflow: hidden;
+  position: absolute;
+  padding: 1em;
+  margin: 1em;
+  bottom: 0;
+  border-radius: 1em;
+  background-color: #efefef;
+  text-align: center; }
+
 #header {
   box-shadow: inset 0 1.5em 3em rgba(255, 255, 255, 0.2), inset 0 -1em 1.5em rgba(0, 0, 0, 0.3);
   height: 3em;
@@ -38,6 +72,10 @@ html {
   height: calc(100% - 5em);
   background-color: #fff; }
 
+#footer {
+  height: 2em;
+  background-color: #fff; }
+
 #room-joiner {
   margin-left: auto;
   width: 20em;
@@ -54,7 +92,23 @@ html {
 #you-button {
   margin: 0.2em;
   width: 5em;
-  border: none; }
+  border: none;
+  background-color: #efefef; }
+  #you-button:hover {
+    background-color: #e2e2e2; }
+
+.flash-you-button {
+  animation: you-button-flash 5s; }
+
+@keyframes you-button-flash {
+  0% {
+    box-shadow: inset 0 0 0 transparent; }
+  70% {
+    box-shadow: inset 0 0 0 transparent; }
+  80% {
+    box-shadow: inset 0 0 10px #ff3737; }
+  100% {
+    box-shadow: inset 0 0 0 transparent; } }
 
 .login-input {
   box-sizing: border-box;
@@ -68,7 +122,7 @@ html {
   position: absolute;
   box-sizing: border-box;
   background-color: #efefef;
-  box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   top: 3.5em;
   right: 0.5em;
   text-align: center; }
@@ -85,17 +139,19 @@ html {
   height: 2em; }
 
 #login-tab, #register-tab {
+  border: 0;
   height: 100%;
   margin: 0;
   padding: 0;
   border: 1px solid rgba(0, 0, 0, 0.3);
   background-color: #a2a2a2; }
+  #login-tab:hover, #register-tab:hover {
+    background-color: #aeaeae; }
 
-#login-tab.active-tab {
+#login-tab.active-tab, #register-tab.active-tab {
   background-color: #d4d4d4; }
-
-#register-tab.active-tab {
-  background-color: #d4d4d4; }
+  #login-tab.active-tab:hover, #register-tab.active-tab:hover {
+    background-color: #d4d4d4; }
 
 #login-tab {
   position: absolute;
@@ -113,19 +169,63 @@ html {
   width: 100%;
   height: 3em; }
 
-#login-button {
+#login-button, #register-button {
+  height: 3em;
+  border: 0;
   width: 100%;
-  height: 100%; }
+  background-color: #efefef; }
+  #login-button:hover, #register-button:hover {
+    background-color: #d5d5d5; }
 
-#register-button {
-  width: 100%;
-  height: 100%; }
+#friend-section {
+  border: 1px solid #bbb;
+  margin: 2em; }
+
+.friends-title {
+  color: #bbb;
+  margin: 0.5em; }
 
 #friend-adder {
-  margin: 1em auto 1em auto; }
+  margin: 1em auto 1em auto;
+  width: 100%; }
+  #friend-adder > button {
+    border: none;
+    border-radius: 0 0.5em 0.5em 0;
+    background-color: #fff; }
+  #friend-adder > button:hover {
+    cursor: pointer; }
+  #friend-adder > input {
+    border: none; }
+
+.friend-list {
+  padding: 1em;
+  text-align: left;
+  list-style: none; }
+
+.friend {
+  background-color: #f4f4f4; }
+
+.friend:not(:last-child) {
+  border-bottom: 1px solid #bbb; }
 
 #make-room {
   margin: 1em auto 1em auto; }
+
+#media-controller {
+  display: flex;
+  height: 3em;
+  padding: 1em; }
+
+.media-controller-controls {
+  height: 2em; }
+
+.volume-icon {
+  text-align: center;
+  width: 1em;
+  height: 1em; }
+
+.volume-control {
+  display: inline-block; }
 
 #player-container {
   padding: 0.5em;
@@ -160,7 +260,7 @@ html {
     width: 2em; }
 
 #list-player-holder {
-  height: calc(100% - 4em); }
+  height: calc(100% - 3em); }
 
 @media screen and (min-width: 60em) {
   #list-player-holder {
@@ -178,6 +278,7 @@ html {
     padding: 2em; } }
 
 #landing-message {
+  letter-spacing: 0.15em;
   position: relative;
   top: 2em;
   margin: 0 auto 2em auto;
@@ -186,8 +287,11 @@ html {
   max-width: 30em;
   text-align: center;
   background-color: #efefef;
-  color: #555; }
+  color: #555;
+  animation: ease landing-raise 1s; }
 
-#media-controller {
-  height: 4em;
-  padding: 1em; }
+@keyframes landing-raise {
+  0% {
+    top: 4em; }
+  100% {
+    top: 2em; } }

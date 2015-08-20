@@ -4,7 +4,12 @@ $color-glow: rgba(255, 255, 255, 1.0)
 $color-1: #bbb
 $color-2: #30303f
 $color-3: #efefef
+$color-4: #e99f95
 $color-grey-text: #555
+$color-very-light-grey: #f4f4f4
+$color-red-glow: rgba(255, 55, 55, 1.0)
+
+$media-controller-height: 3em
 
 .glow
   box-shadow: inset 0 0 5px $color-glow
@@ -27,6 +32,46 @@ html
   width: 100%
   height: 100%
 
+
+
+#alert-box.alert-flash
+  animation: alert-flash 3s
+
+@keyframes alert-flash
+  0%
+    opacity: 0
+    background-color: $color-3
+  5%
+    opacity: 1
+    background-color: #b88
+  50%
+    opacity: 1
+    background-color: $color-3
+
+  95%
+    opacity: 1
+    background-color: $color-3
+
+  100%
+    opacity: 0
+    background-color: $color-3
+
+#alert-box
+  opacity: 0
+  box-sizing: border-box
+  width: auto
+  height: 4em
+  overflow: hidden
+  position: absolute
+  padding: 1em
+  margin: 1em
+  bottom: 0
+  border-radius: 1em
+  background-color: $color-3
+  text-align: center
+
+
+
 #header
   box-shadow: inset 0 1.5em 3em $color-white-shadow, inset 0 -1em 1.5em $color-light-shadow
   height: 3em
@@ -48,6 +93,8 @@ html
   background-color: #fff
 
 #footer
+  height: 2em
+  background-color: #fff
 
 #room-joiner
   margin-left: auto
@@ -66,7 +113,22 @@ html
   margin: 0.2em
   width: 5em
   border: none
+  background-color: $color-3
+  &:hover
+    background-color: darken($color-3, 5%)
 
+.flash-you-button
+  animation: you-button-flash 5s
+
+@keyframes you-button-flash
+  0%
+    box-shadow: inset 0 0 0 rgba(0,0,0,0)
+  70%
+    box-shadow: inset 0 0 0 rgba(0,0,0,0)
+  80%
+    box-shadow: inset 0 0 10px $color-red-glow
+  100%
+    box-shadow: inset 0 0 0 rgba(0,0,0,0)
 
 .login-input
   box-sizing: border-box
@@ -80,7 +142,7 @@ html
   position: absolute
   box-sizing: border-box
   background-color: $color-3
-  box-shadow: inset 0 -1px 2px $color-light-shadow
+  box-shadow: 0 1px 2px $color-light-shadow
   top: 3.5em
   right: 0.5em
   text-align: center
@@ -97,17 +159,19 @@ html
   height: 2em
 
 #login-tab, #register-tab
+  border: 0
   height: 100%
   margin: 0
   padding: 0
   border: 1px solid $color-light-shadow
   background-color: darken($color-1, 10%)
+  &:hover
+    background-color: darken($color-1, 5%)
 
-#login-tab.active-tab
+#login-tab.active-tab, #register-tab.active-tab
   background-color: lighten($color-1, 10%)
-
-#register-tab.active-tab
-  background-color: lighten($color-1, 10%)
+  &:hover
+    background-color: lighten($color-1, 10%)
 
 #login-tab
   position: absolute
@@ -125,19 +189,63 @@ html
   width: 100%
   height: 3em
 
-#login-button
+#login-button, #register-button
+  height: 3em
+  border: 0
   width: 100%
-  height: 100%
+  background-color: $color-3
+  &:hover
+    background-color: darken($color-3, 10%)
 
-#register-button
-  width: 100%
-  height: 100%
+#friend-section
+  border: 1px solid $color-1
+  margin: 2em
+
+.friends-title
+  color: $color-1
+  margin: 0.5em
 
 #friend-adder
   margin: 1em auto 1em auto
+  width: 100%
+  &>button
+    border: none
+    border-radius: 0 0.5em 0.5em 0
+    background-color: #fff
+  &>button:hover
+    cursor: pointer
+  &>input
+    border: none
+
+.friend-list
+  padding: 1em
+  text-align: left
+  list-style: none
+
+.friend
+  background-color: $color-very-light-grey
+
+.friend:not(:last-child)
+  border-bottom: 1px solid $color-1
 
 #make-room
   margin: 1em auto 1em auto
+
+#media-controller
+  display: flex
+  height: 3em
+  padding: 1em
+
+.media-controller-controls
+  height: 2em
+
+.volume-icon
+  text-align: center
+  width: 1em
+  height: 1em
+
+.volume-control
+  display: inline-block
 
 
 #player-container
@@ -173,7 +281,7 @@ html
     width: 2em
 
 #list-player-holder
-  height: calc(100% - 4em)
+  height: calc(100% - 3em)
 
 @media screen and (min-width: 60em)
   #list-player-holder
@@ -194,6 +302,7 @@ html
 
 
 #landing-message
+  letter-spacing: 0.15em
   position: relative
   top: 2em
   margin: 0 auto 2em auto
@@ -203,8 +312,11 @@ html
   text-align: center
   background-color: $color-3
   color: $color-grey-text
+  animation: ease landing-raise 1s
 
+@keyframes landing-raise
+  0%
+    top: 4em
 
-#media-controller
-  height: 4em
-  padding: 1em
+  100%
+    top: 2em

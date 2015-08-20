@@ -14,7 +14,7 @@ var options = {
 };
 
 //================================GET=PORT======================================
-var port = process.env.PORT || 8080;
+var port = process.env.PORT || 3000;
 
 //================================GET=DEPENDENCIES==============================
 var path =       require('path');
@@ -29,7 +29,9 @@ var ioWildcard = require('socketio-wildcard');
 
 //================================MISC=CONFIG===================================
 
-//require('./config')();
+if ( process.argv[2] === 'dev' ) {
+  require('./config')();
+}
 mongoose.connect(process.env.MONGOLAB_URI);
 
 // ===============================MODELS========================================
@@ -67,3 +69,4 @@ var httpsServer = http.createServer(app); //OPTIONS HERE
 io.listen(httpsServer);
 //================================START=SERVER==================================
 httpsServer.listen(port);
+console.log('listening on port:', port);

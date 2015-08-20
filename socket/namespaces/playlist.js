@@ -13,14 +13,16 @@ module.exports = function(io) {
       return Promise.reject('Playlist is undefined.');
     }
 
-    if (user === undefined) {
-      return Promise.reject('User is undefined.');
-    }
-
     // Anybody is authorized
     if (playlist[permission] === 0) {
       return Promise.resolve(true);
     }
+
+    // Beyond this point only users can be authorized so reject non users now
+    if (user === undefined) {
+      return Promise.reject('You must be logged in to do that.');
+    }
+
     // Only friends are authorized
     else if (playlist[permission] === 1) {
 
@@ -101,6 +103,10 @@ module.exports = function(io) {
         },
         // Find user document for user requesting join
         function() {
+          if (!results.resolvedPayload) {
+            // If no valid token was sent, attempt to continue without a user
+            return Promise.resolve();
+          }
           return User.findOne(
             {username: results.resolvedPayload.username}
           ).then(function(user){
@@ -113,6 +119,9 @@ module.exports = function(io) {
         },
         // Get playlist
         function() {
+          if (!data.room) {
+            return Promise.reject('A room name must be provided.');
+          }
           return Playlist.findOne({owner: data.room}).exec()
           .then(function(playlist){
             if (playlist) {
@@ -135,6 +144,15 @@ module.exports = function(io) {
                 return Promise.reject('No playlist found.');
               }
             });
+          },
+          // authorize user
+          function() {
+            return authorize(results.playlist, results.user, 'joinPermission')
+              .then(function(isAuthorized){
+                if (!isAuthorized) {
+                  return Promise.reject('You aren\'t authorized to join that room.');
+                }
+              });
           },
           // Join playlist
           function() {
@@ -178,7 +196,7 @@ module.exports = function(io) {
               socket.emit('playlist-state', playlistReport);
 
             }, function(err) {
-            console.log(err);
+            console.log('auth add error:', err);
           }
 
         );
@@ -215,6 +233,13 @@ module.exports = function(io) {
           });
         }
 
+        if (typeof data.title !== 'string') {
+          return socket.emit('playlist-error', {
+            success: false,
+            message: 'Invalid title sent.'
+          });
+        }
+
         //======================================================================
         //                          Perform Action
         //======================================================================
@@ -236,14 +261,14 @@ module.exports = function(io) {
             if (isAuthorized) {
               return Promise.resolve();
             }
-            return Promise.reject('Not authorized.');
+            return Promise.reject('You are authorized to add songs :(');
           }
         ]
         .reduce(function(previous, returnPromise) {
           return previous.then(returnPromise);
         }, Promise.resolve())
         .then(function () {            //Add url to playlist document
-          playlist.playlist.push({url: data.url, time: 0});
+          playlist.playlist.push({url: data.url, title: data.title});
 
           // Create state to send to client
           var playlistState = {
@@ -504,7 +529,7 @@ module.exports = function(io) {
           isPlaying: typeof data.isPlaying === 'boolean' ?
           data.isPlaying :
           playlist.isPlaying,
-          
+
           nowPlaying: newSongIndex,
           time: 0
         };

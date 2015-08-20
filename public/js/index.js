@@ -4,14 +4,15 @@ $(document).ready(function(){
 angular.module('index', [])
   .controller('SongShareCtrl', ['$scope', function($scope){
     // User variables
-    $scope.username = '';
-    $scope.password = '';
+    $scope.username = 'cat';
+    $scope.password = 'Batter1es!';
     $scope.confirmPassword = '';
     $scope.friendName = '';
     $scope.token = null;
     $scope.loggedInUsername = '';
     $scope.activeTab = 0;
     $scope.showUserBox = false;
+    $scope.friends = [];
 
     // Playlist variables
     $scope.urlToAdd = '';
@@ -24,15 +25,25 @@ angular.module('index', [])
     $scope.addPermission = false;
     $scope.currentSong = '';
     $scope.currentSongDomain = '';
+    $scope.volume = 50;
+
+    $scope.flashYouButton = true;
+
+    $scope.showAlert = false;
+    $scope.alertTimeouts = [];
 
     // Object to hold user actions, interface event handlers
     var actions = $scope.actions = {};
 
-    var userSocket = io.connect('/user');
-    var playlistSocket = io.connect('/playlist');
+    var conditionalColon = window.location.port ? ':' : '' ;
+    var userSocket = io.connect(conditionalColon+window.location.port+'/user');
+    var playlistSocket = io.connect(conditionalColon+window.location.port+'/playlist');
 
     var timeRequestIgnore = false;
     var firstPlay = true;
+    var timeUpdated = false;
+
+    var alertBox = $('#alert-box');
 
     var host2widgetBaseUrl = {
       "wt.soundcloud.dev" : "wt.soundcloud.dev:9200/",
@@ -41,9 +52,11 @@ angular.module('index', [])
     };
     var songIframe = document.querySelector('#SCwidget');
     var SCwidget = SC.Widget(songIframe);
+    SC.initialize({client_id: '4d31f97b23c646bc260647f88f7ed08e'});
 
     // Bind SoundCloud events
     SCwidget.bind(SC.Widget.Events.READY, function(){
+      console.log('ready');
     });
 
     SCwidget.bind(SC.Widget.Events.PLAY, function(data){
@@ -103,10 +116,40 @@ angular.module('index', [])
     });
 
     var displayMessage = function displayMessage(msg) {
-      console.log(msg);
+
+      // Clear previous timeouts that make the alert box disappear
+      for (var i = 0, l = $scope.alertTimeouts.length; i < l; i++) {
+        window.clearTimeout($scope.alertTimeouts[i]);
+      }
+
+      // Change alert box text
+      alertBox.text(msg);
+
+      // Hide box for now
+      $scope.showAlert = false;
+
+      // Show the alert box in a bit to reset animation
+      $scope.alertTimeouts.push(setTimeout(function(){
+        $scope.showAlert = true;
+        $scope.$apply();
+      }, 100));
+
+
+      // Set timeout to hide alert box
+      $scope.alertTimeouts.push(setTimeout(function(){
+        $scope.showAlert = false;
+        $scope.$apply();
+      }, 4000));
+
+      $scope.$apply();
+
     };
 
-    var SCcorrectTime = function currectTime() {
+    var getSongDomain = function getSongDomain() {
+
+    };
+
+    var SCcorrectTime = function SCcurrectTime() {
       // Seek SoundCloud widget to current time if difference is > 1 second
       SCwidget.getPosition(function(position){
         console.log('looking to correct time', position, 'to', $scope.time);
@@ -115,6 +158,21 @@ angular.module('index', [])
           SCwidget.seekTo($scope.time);
         }
       });
+    };
+
+    var SCgetTitle = function SCgetTitle(songUrl){
+        // Return a promise that resolves with a title
+        return new Promise(function(resolve, reject){
+          SC.get('/resolve', { url: songUrl}, function(track) {
+            console.log(track);
+            if (track.kind === 'track') {
+              resolve(track.user.username+' - '+track.title);
+            } else {
+              reject();
+            }
+
+          });
+        });
     };
 
     var updateSongInWidget = function updateSongInWidget() {
@@ -176,19 +234,6 @@ angular.module('index', [])
           visual: true,
           show_artwork: true,
           auto_play: $scope.isPlaying
-          /*
-          callback: function() {
-            SCwidget.play();
-              setTimeout(function() {
-
-                SCwidget.seekTo($scope.time);
-                if (!$scope.isPlaying) {
-                  SCwidget.pause();
-                }
-              }, 1000);
-
-          }
-          */
         };
 
         var songUrl = $scope.currentSong.url;
@@ -221,10 +266,11 @@ angular.module('index', [])
             SCwidget.pause();
           }
 
-          else if (!isPaused) {
+          else if (!isPaused && timeUpdated) {
             SCcorrectTime();
           }
         });
+
       }
     };
 
@@ -259,6 +305,9 @@ angular.module('index', [])
         window.setTimeout(function(){
           timeRequestIgnore = false;
         }, 2000);
+
+        $scope.showUserBox = false;
+        $scope.$apply();
       }
       else {
         displayMessage('Message:');
@@ -299,7 +348,9 @@ angular.module('index', [])
 
       // Sync time==============================================================
       if (typeof playlistState.time === 'number') {
+        console.log('changing time to', playlistState.time);
         $scope.time = playlistState.time;
+        timeUpdated = true;
       }
 
       // Sync play/pause state==================================================
@@ -323,21 +374,46 @@ angular.module('index', [])
       // Have angular update the view with the new state
       $scope.$apply();
 
+      // Reset flag
+      timeUpdated = false;
+
     });
 
     userSocket.on('authenticate-result', function(data){
+
       if (data.token) {
-        console.log('token recieved');
         $scope.token = data.token;
       }
       if (data.username) {
         $scope.loggedInUsername = data.username;
       }
+      if (data.friends) {
+        $scope.friends = data.friends;
+      }
       if (data.message) {
-        console.log(data.message);
+        displayMessage(data.message);
       }
 
       $scope.$apply();
+    });
+
+    userSocket.on('register-result', function(data){
+      if (!data.success && data.message) {
+        displayMessage(data.message);
+      }
+
+      if (data.success) {
+        actions.login($scope.username, $scope.password);
+      }
+
+    });
+
+    userSocket.on('add-friend-response', function(data) {
+      if (data.success) {
+        $scope.friends.push(data.friend);
+      } else {
+        displayMessage(data.message);
+      }
     });
 
     // DEFINE USER ACTIONS
@@ -347,8 +423,12 @@ angular.module('index', [])
     };
 
     actions.add = function add(url) {
-      var sendData = {token: $scope.token, url: url};
-      playlistSocket.emit('add', sendData);
+      SCgetTitle(url).then(function(title){
+        var sendData = {token: $scope.token, url: url, title: title};
+        playlistSocket.emit('add', sendData);
+        $scope.urlToAdd = '';
+      });
+
     };
 
     actions.remove = function remove(index) {
@@ -405,8 +485,12 @@ angular.module('index', [])
     };
 
     actions.register = function register(username, password) {
-      var data = {token: $scope.token, username: username, password: password};
-      userSocket.emit('register', data);
+      if ($scope.password === $scope.confirmPassword) {
+        var data = {token: $scope.token, username: username, password: password};
+        userSocket.emit('register', data);
+      } else {
+        displayMessage('Those passwords don\'t match!');
+      }
 
     };
 
@@ -418,6 +502,39 @@ angular.module('index', [])
     actions.addFriend = function addFriend(name) {
       var data = {token: $scope.token, friendToBe: $scope.friendName };
       userSocket.emit('add-friend', data);
+    };
+
+    actions.updateVolume = function updateVolume() {
+      console.log('looking for domain');
+      if ($scope.currentSongDomain === 'soundcloud') {
+        console.log('changing:', $scope.volume);
+        SCwidget.setVolume($scope.volume / 100);
+      }
+    };
+
+    actions.logout = function logout(){
+      $scope.username = '';
+      $scope.password = '';
+      $scope.confirmPassword = '';
+      $scope.friendName = '';
+      $scope.token = null;
+      $scope.loggedInUsername = '';
+      $scope.activeTab = 0;
+      $scope.showUserBox = false;
+      $scope.friends = [];
+
+      // Playlist variables
+      $scope.urlToAdd = '';
+      $scope.desiredRoom = '';
+      $scope.room = '';
+      $scope.list = {};
+      $scope.isPlaying = false;
+      $scope.nowPlaying = -1;
+      $scope.time = 0;
+      $scope.addPermission = false;
+      $scope.currentSong = '';
+      $scope.currentSongDomain = '';
+      displayMessage("Bye, have fun!");
     };
 
   }]);
