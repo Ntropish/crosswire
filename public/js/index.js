@@ -82,6 +82,8 @@ angular.module('index', [])
 
     SCwidget.bind(SC.Widget.Events.PAUSE, function(data){
 
+      actions.updateVolume();
+
       // CHeck if event needs to be sent
       if ($scope.isPlaying) {
 
@@ -506,7 +508,6 @@ angular.module('index', [])
     };
 
     actions.updateVolume = function updateVolume() {
-      console.log('looking for domain');
       if ($scope.currentSongDomain === 'soundcloud') {
         console.log('changing:', $scope.volume);
         SCwidget.setVolume($scope.volume / 100);
