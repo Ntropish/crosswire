@@ -223,9 +223,9 @@ module.exports = function(io) {
           }
         },
 
-        function(data) {
-          data.user.friends.push(data.friend._id);
-          return data.user.save();
+        function() {
+          results.user.friends.push(results.friend._id);
+          return results.user.save();
         }
       ]
         .reduce(function(previous, returnPromise) {
