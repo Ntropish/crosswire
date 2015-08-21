@@ -9,12 +9,12 @@ html
  body
   div#container(ng-app="index" ng-controller="SongShareCtrl as controller")
   
-    div#user(ng-show="showUserBox")
+    div#user(ng-show="showUserBox" ng-cloak)
       h2 {{ loggedInUsername }}
       div#login-and-registration(ng-show="!token")
         div#login-and-registration-tabs
-          button#login-tab(ng-click="activeTab = 0" ng-class="{'active-tab': activeTab == '0'}") Login
-          button#register-tab(ng-click="activeTab = 1" ng-class="{'active-tab': activeTab == '1'}") Register
+          button#login-tab(ng-click="activeTab = 0" ng-class="{'active-tab': activeTab == '0'}" class="tab-button") Login
+          button#register-tab(ng-click="activeTab = 1" ng-class="{'active-tab': activeTab == '1'}" class="tab-button") Register
         form#login(ng-show="activeTab === 0")
           input.login-input(type="text" ng-model="username" placeholder="Username")
           input.login-input(type="password" ng-model="password" placeholder="Password")
@@ -33,7 +33,7 @@ html
           button(ng-click="actions.addFriend(friendName)")
             i(class="fa fa-plus")
         ul.friend-list
-          li.friend(ng-repeat="friend in friends") {{ friend }}
+          li.friend(ng-repeat="friend in friends" class="round-list") {{ friend }}
       div#user-actions(ng-show="token")
         button#make-room(ng-click="actions.join(loggedInUsername)") Join Your Room
         button#log-out(ng-click="actions.logout()") Logout
@@ -49,11 +49,12 @@ html
         button(ng-click="actions.join(desiredRoom)") Join Room
       button#you-button(ng-click="showUserBox = !showUserBox; flashYouButton = false" 
         class="glow"
-        ng-class="{'flash-you-button': flashYouButton}") You
+        ng-class="{'flash-you-button': flashYouButton}"
+        ng-cloak) {{ token?"You":"Log in!"}}
 
-    section#body
+    section#body(ng-cloak)
       div#media-controller(ng-show="room")
-        div.media-controller-controls
+        div.media-controller-console
           button(ng-click="actions.playPause(true)") 
             i(class="fa fa-play")
           button(ng-click="actions.playPause(false)")
@@ -67,17 +68,29 @@ html
             i.volume-icon(class="fa fa-volume-down" ng-show="volume >= 10 && volume <= 90")
             i.volume-icon(class="fa fa-volume-up" ng-show="volume > 90")
             input(ng-model="volume" type="range" minimum="0" maximum="100" ng-change="actions.updateVolume()")
-        
+          div#current-song-title()
+            |  
+            span(ng-show="currentSong.title" ng-class="{'scroll-title':scrollConsoleTitle}" data-offset="-500")
+              |   {{ currentSong.title }}
       div#list-player-holder(ng-show="room")
         div#song-list
           div#song-adder
-            input(type="text" ng-model="urlToAdd" placeholder="URL")
-            button(ng-click="actions.add(urlToAdd)") Add Song
+            input(type="text" ng-model="urlToAdd" placeholder="SoundCloud URL")
+            button(ng-click="actions.add(urlToAdd)") Add
           ul#songs
-            li.song-item(ng-repeat="song in list")
-              div.play-symbol
-                i(class="fa fa-play" ng-show="$index === nowPlaying" ng-click="actions.playPause(true)")
-              div.song-name {{ song.title }}
+            li.song-item(draggable="true" 
+              ondragover="return false"
+              ng-repeat="song in list" 
+              class="round-list" 
+              ng-attr-data-index="{{$index}}"
+              )
+              div.song-controls
+                div.move-this-song(title="Move song")
+                  i(class="fa fa-ellipsis-v")
+                button.change-song(title="Change to this song"  ng-click="actions.change($index)")
+                  i(class="fa fa-arrow-right" ng-class="{'current-song':$index === nowPlaying}")
+
+              span.song-name {{ song.title }}
               button(ng-click="actions.remove($index)") X
           
         div#player-container(ng-show="currentSongDomain")
@@ -93,9 +106,9 @@ html
         p Sign in, join a playlist, or make 
           | one to share with friends!
 
-    section#footer
     
-    section#hidden(ng-show="false")
+    div#hidden(ng-show="false")
+      span#text-width-calc
     
     script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js")
     script(src='https://cdn.socket.io/socket.io-1.3.5.js' )

@@ -6,10 +6,16 @@ $color-2: #30303f
 $color-3: #efefef
 $color-4: #e99f95
 $color-grey-text: #555
-$color-very-light-grey: #f4f4f4
+$color-very-light-grey: #f9f9f9
 $color-red-glow: rgba(255, 55, 55, 1.0)
+$color-soft-warn: #faa
+$color-greyed-out: #999
 
 $media-controller-height: 3em
+
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak
+  display: none !important
+
 
 .glow
   box-shadow: inset 0 0 5px $color-glow
@@ -20,13 +26,23 @@ $media-controller-height: 3em
 body
   padding: 0
   margin: 0
-  background-color: $color-1
+  background-color: #111
   height: 100%
+  overflow: hidden
 
 html
   padding: 0
   margin: 0
   height: 100%
+
+button
+  border: none
+  border-radius: 2px
+  box-shadow: inset 0 0px 1px $color-light-shadow, inset 0 1px 2px rgba(255, 255, 255, 0.8)
+  background-color: $color-3
+  &:hover
+    background-color: darken($color-3, 5%)
+    box-shadow: inset 0 -px 2px lighten($color-light-shadow, 70%)
 
 #container
   width: 100%
@@ -71,16 +87,18 @@ html
   text-align: center
 
 
-
 #header
-  box-shadow: inset 0 1.5em 3em $color-white-shadow, inset 0 -1em 1.5em $color-light-shadow
+  z-index: 3
+  box-shadow: inset 0 1.5em 3em $color-white-shadow,
+  inset 0 -1em 1.5em $color-light-shadow,
+  0 1px 2px $color-white-shadow
   height: 3em
   display: flex
   background-color: $color-2
   font-family: 'Sarala', sans-serif
   &>h2
 
-    flex: 0 0 1
+    flex: 0 0 1em
     display: inline-block
     height: 1.4em
     margin: 0
@@ -89,8 +107,8 @@ html
     font-weight: 300
 
 #body
-  height: calc(100% - 5em)
-  background-color: #fff
+  height: calc(100% - 3em)
+  //background-color: #fff
 
 #footer
   height: 2em
@@ -100,35 +118,33 @@ html
   margin-left: auto
   width: 20em
   display: flex
-  padding: 0.2em
+  padding: 0.4em
   &>input
     width: 70%
     border: none
-    font-size: 1.5em
+    font-size: 1.3em
+    border-radius: 2px 0 0 2px
   &>button
     width: 30%
     border: none
+    background-color: $color-3
+    border-radius: 0 2px 2px 0
+    box-shadow: inset 0 -1px 2px $color-light-shadow
+    &:hover
+      background-color: darken($color-3, 5%)
+      box-shadow: inset 0 -2px 2px lighten($color-light-shadow, 50%)
 
 #you-button
-  margin: 0.2em
+  position: relative
+  margin: 0.4em
   width: 5em
   border: none
   background-color: $color-3
+  border-radius: 2px
+  box-shadow: inset 0 -1px 2px $color-light-shadow
   &:hover
     background-color: darken($color-3, 5%)
-
-.flash-you-button
-  animation: you-button-flash 5s
-
-@keyframes you-button-flash
-  0%
-    box-shadow: inset 0 0 0 rgba(0,0,0,0)
-  70%
-    box-shadow: inset 0 0 0 rgba(0,0,0,0)
-  80%
-    box-shadow: inset 0 0 10px $color-red-glow
-  100%
-    box-shadow: inset 0 0 0 rgba(0,0,0,0)
+    box-shadow: inset 0 -2px 2px lighten($color-light-shadow, 50%)
 
 .login-input
   box-sizing: border-box
@@ -158,20 +174,26 @@ html
   width: 100%
   height: 2em
 
-#login-tab, #register-tab
+.tab-button
+  color: $color-2
   border: 0
   height: 100%
   margin: 0
   padding: 0
-  border: 1px solid $color-light-shadow
   background-color: darken($color-1, 10%)
+  box-shadow: inset 0 1px 2px $color-light-shadow
+  border-radius: 0
   &:hover
     background-color: darken($color-1, 5%)
-
-#login-tab.active-tab, #register-tab.active-tab
-  background-color: lighten($color-1, 10%)
-  &:hover
+  &.active-tab
+    box-shadow: none
     background-color: lighten($color-1, 10%)
+    &:hover
+      background-color: lighten($color-1, 10%)
+  &:focus
+    outline: 0
+
+#login
 
 #login-tab
   position: absolute
@@ -221,85 +243,182 @@ html
   padding: 1em
   text-align: left
   list-style: none
+  max-height: 5em
+  overflow-y: scroll
+  overflow-x: visible
 
-.friend
+.round-list
   background-color: $color-very-light-grey
 
-.friend:not(:last-child)
-  border-bottom: 1px solid $color-1
+.round-list:not(:last-child)
+  border-bottom: 1px solid $color-3
+
+.round-list:first-child
+  border-radius: 5px 5px 0 0
+
+.round-list:last-child
+  border-radius: 0 0 5px 5px
 
 #make-room
   margin: 1em auto 1em auto
+#log-out
+  margin: 1em auto 1em auto
+
 
 #media-controller
-  display: flex
+  box-sizing: border-box
   height: 3em
-  padding: 1em
+  padding: 0.5em
 
-.media-controller-controls
+.media-controller-console
   height: 2em
+  display: flex
+  align-items: center
+  flex-wrap: nowrap
+  &>button
+    flex: 0 0 2em
+  &>#current-song-title
+    position: relative
+    margin-left: auto
+    overflow: hidden
+    padding: 1px
+    text-align: right
+    flex: 1 1
+    &>span
+      color: white
+      white-space: nowrap
+      position: relative
+
+.scroll-title
+  color: red
+  //animation: scroll 4s infinite
+  left: -webkit-attr(data-offset)
+
+@keyframes scroll
+  0%
+    transform: translate(0, 0)
+  100%
+    transform: translate(attr(data-offset, px), 0)
+
 
 .volume-icon
+  color: white
   text-align: center
   width: 1em
   height: 1em
 
 .volume-control
-  display: inline-block
+  width: 7em
+  display: flex
+  align-items: center
+  &>i
+    flex: 0 0 1em
+  &>input
+    flex: 1 2 5em
+    margin: 0
 
-
-#player-container
-  padding: 0.5em
-  background: $color-3
 
 #song-adder
+  height: 2em
   display: flex
   &>input
     width: 100%
-    flex: 1 0 1
+    flex: 1 1 10em
   &>button
-    flex: 0 1 1
-
-#song-list
-  padding: 0.5em
-  background: $color-3
-  &>#songs
-    list-style: none
-    padding-left: 0
+    flex: 0 1 5em
 
 .song-item
+  font-size: 0.8em
+  position: relative
   border: 1px solid rgba(0,0,0,0.1)
   display: flex
-  &>.play-symbol
-    width: 2em
+  &>.song-controls
     text-align: center
+    flex: 0 0 4em
+    display: flex
+    &>div
+      color: $color-greyed-out
+      flex: 0 0 2em
+    &>button
+      color: $color-greyed-out
+      box-shadow: none
+    &>*:first-child
+      border-top-left-radius: 0
+      border-bottom-left-radius: 0
+    &>*:not(:first-child)
+      border-radius: 0
   &>.song-name
     height: 1.5em
     width: calc(100% - 4em)
     overflow: hidden
+    white-space: nowrap
+    flex: 1 1 5em
   &>button
-    width: 2em
+    border-top-left-radius: 0
+    border-bottom-left-radius: 0
+    flex: 0 0 2em
+    box-shadow: none
+    background-color: $color-soft-warn
+    &:hover
+      background-color: darken($color-soft-warn, 10%)
+
+.drop-select
+  border-top: 1px solid #111
+
+.current-song
+  color: green
+
+#song-list
+  height: calc(100% - 11em)
+  padding: 0.5em
+  background: $color-2
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5)
+  margin: 0.5em 0.5em 0 0.5em
+  &>#songs
+    max-height: calc(100% - 3em)
+    overflow-x: visible
+    overflow-y: scroll
+    list-style: none
+    padding-left: 0
 
 #list-player-holder
   height: calc(100% - 3em)
+  display: flex
+  flex-direction: column
+  padding-bottom: 0
 
-@media screen and (min-width: 60em)
+
+#player-container
+  padding: 0.5em
+  margin: 0 0.5em 0 0.5em
+  background: $color-2
+  height: calc(10em)
+
+
+@media screen and (min-width: 40em)
+  #song-list
+    height: calc(100% - 1em)
+
   #list-player-holder
     display: flex
+    flex-direction: row
+    padding: 0.5em 0.5em 0 0.5em
 
   #song-list
+
     display: inline-block
     box-sizing: border-box
     width: 50%
-    padding: 2em
+    padding: 0.5em
 
   #player-container
     display: inline-block
     box-sizing: border-box
     width: 50%
-    height: 100%
-    padding: 2em
-
+    height: calc(100% - 1em)
+    padding: 0.5em 0.5em 0 0.5em
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5)
+    margin: 0.5em 0.5em 0 0.5em
 
 #landing-message
   letter-spacing: 0.15em
@@ -312,6 +431,7 @@ html
   text-align: center
   background-color: $color-3
   color: $color-grey-text
+  box-shadow: 0 1px 2px $color-light-shadow
   animation: ease landing-raise 1s
 
 @keyframes landing-raise

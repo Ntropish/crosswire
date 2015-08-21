@@ -1,12 +1,10 @@
-$(document).ready(function(){
-});
 
 angular.module('index', [])
   .controller('SongShareCtrl', ['$scope', function($scope){
     // User variables
-    $scope.username = '';
-    $scope.password = '';
-    $scope.confirmPassword = '';
+    $scope.username = 'cat';
+    $scope.password = 'Batter1es!';
+    $scope.confirmPassword = 'Batter1es!';
     $scope.friendName = '';
     $scope.token = null;
     $scope.loggedInUsername = '';
@@ -29,15 +27,60 @@ angular.module('index', [])
 
     $scope.flashYouButton = true;
 
+    $scope.scrollConsoleTitle = false;
     $scope.showAlert = false;
     $scope.alertTimeouts = [];
+
+
+    // Handle song drag and drop here
+    document.addEventListener('dragstart', function(event){
+      var dragged = event.target;
+      dragged.style.opacity = 0.5;
+      event.dataTransfer.setData("fromIndex", $(event.target).attr('data-index'));
+    });
+
+    document.addEventListener('dragend', function(event){
+      var dragged = event.target;
+      dragged.style.opacity = '';
+    });
+
+    document.addEventListener('drop', function(event){
+      var song = $(event.target).closest('.song-item');
+      var fromIndex = event.dataTransfer.getData('fromIndex');
+      var toIndex = $(song).attr('data-index');
+      actions.move(+fromIndex, +toIndex);
+    });
+
+
+    // Title overflow management
+    var consoleTitle = $('#current-song-title');
+    var consoleTitleHeader = $('#current-song-title>span');
+
+    var updateTitleScroll = function updateTitleScroll() {
+      if (consoleTitle.width() < consoleTitleHeader.width()) {
+        $scope.scrollConsoleTitle = true;
+      }
+      else {
+        $scope.scrollConsoleTitle = false;
+      }
+    };
+
+    consoleTitle.bind('DOMSubtreeModified', function(){
+      updateTitleScroll();
+    });
+
+    $( window ).resize(function(){
+        updateTitleScroll();
+        $scope.$apply();
+    });
+
 
     // Object to hold user actions, interface event handlers
     var actions = $scope.actions = {};
 
     var conditionalColon = window.location.port ? ':' : '' ;
     var userSocket = io.connect(conditionalColon+window.location.port+'/user');
-    var playlistSocket = io.connect(conditionalColon+window.location.port+'/playlist');
+    var playlistSocket = io.connect(conditionalColon+window.location.port+'/playlist', {query: 'room='+$scope.room});
 
     var timeRequestIgnore = false;
     var firstPlay = true;
@@ -56,7 +99,6 @@ angular.module('index', [])
 
     // Bind SoundCloud events
     SCwidget.bind(SC.Widget.Events.READY, function(){
-      console.log('ready');
     });
 
     SCwidget.bind(SC.Widget.Events.PLAY, function(data){
@@ -84,7 +126,6 @@ angular.module('index', [])
 
     SCwidget.bind(SC.Widget.Events.PAUSE, function(data){
 
-      actions.updateVolume();
 
       // CHeck if event needs to be sent
       if ($scope.isPlaying) {
@@ -101,7 +142,6 @@ angular.module('index', [])
     });
 
     SCwidget.bind(SC.Widget.Events.PLAY_PROGRESS, function(data){
-      console.log('====play progress event');
 
     });
 
@@ -226,7 +266,9 @@ angular.module('index', [])
         }
 
         $scope.currentSong = newSong;
+
         loadSong();
+
       }
     };
 
@@ -237,7 +279,8 @@ angular.module('index', [])
         var options = {
           visual: true,
           show_artwork: true,
-          auto_play: $scope.isPlaying
+          auto_play: $scope.isPlaying,
+          callback: actions.updateVolume
         };
 
         var songUrl = $scope.currentSong.url;
@@ -248,6 +291,7 @@ angular.module('index', [])
 
       if ($scope.currentSongDomain === 'soundcloud') {
         loadSC();
+
 
       }
     };
@@ -277,6 +321,13 @@ angular.module('index', [])
 
       }
     };
+
+    playlistSocket.on('playlist-connect', function(){
+      if ($scope.room) {
+        console.log('trying to rejoin');
+        actions.join($scope.room);
+      }
+    });
 
     playlistSocket.on('time-request', function(){
       console.log('GOT TIME REQUEST');
@@ -375,8 +426,10 @@ angular.module('index', [])
       // Update widget to math state
       fixWidgetDiscrepancies();
 
+
       // Have angular update the view with the new state
       $scope.$apply();
+
 
       // Reset flag
       timeUpdated = false;
@@ -428,10 +481,18 @@ angular.module('index', [])
     };
 
     actions.add = function add(url) {
+
+      // Silently reject blank cases
+      if (url === '') {
+        return;
+      }
+
       SCgetTitle(url).then(function(title){
         var sendData = {token: $scope.token, url: url, title: title};
         playlistSocket.emit('add', sendData);
         $scope.urlToAdd = '';
+      }, function(err) {
+        displayMessage('Couldn\'t find that song');
       });
 
     };
@@ -460,12 +521,11 @@ angular.module('index', [])
 
           // If this is a pause event, send the widget's current time
           if (!isPlaying) {
-            if ($scope.currentSongDomain === 'soundcloud') {
-              SCwidget.getPosition(function(position){
-                sendData.time = position;
-                playlistSocket.emit('play-pause', sendData);
-              });
-            }
+            SCwidget.getPosition(function(position){
+              sendData.time = position;
+              playlistSocket.emit('play-pause', sendData);
+            });
+
           } else {
             playlistSocket.emit('play-pause', sendData);
           }
@@ -479,8 +539,8 @@ angular.module('index', [])
       playlistSocket.emit('transport', data);
     };
 
-    actions.move = function move(from, to) {
-      var data = {token: $scope.token, fromTo: {from: from, to: to}};
+    actions.move = function move(fromIndex, toIndex) {
+      var data = {token: $scope.token, fromTo: {from: fromIndex, to: toIndex}};
       playlistSocket.emit('move', data);
     };
 
@@ -541,3 +601,5 @@ angular.module('index', [])
     };
 
   }]);
+$(document).ready(function(){
+});

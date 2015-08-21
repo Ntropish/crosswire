@@ -65,6 +65,7 @@ module.exports = function(io) {
   // To join Doug's room join the 'Doug' room in this namespace
   var playlistNSP = io.of('playlist');
 
+
   // Override onevent to allow wildcard events
   playlistNSP.use(ioWildcard());
 
@@ -438,27 +439,40 @@ module.exports = function(io) {
         //======================================================================
 
         // Perform array modification
-        var songToMove = playlist.playlist[fromTo];
+        var songToMove = playlist.playlist[fromTo.from];
 
-        // Perform remove if fromTo.to is a valid index
-        if (fromTo.to > -1) {
-          playlist.playlist.splice(fromTo.to, 0, removedSong);
-        }
-        // Perform insert
-        if (fromTo.to > -1 && fromTo.to <= fromTo.from) {
-          // If remove was performed below the insert, modify insert location
-          playlist.playlist.splice(fromTo.from - 1, 1);
-        } else {
-          // Else, insert as normal
+        // Perform remove if fromTo.from is a valid index
+        if (fromTo.from > -1) {
           playlist.playlist.splice(fromTo.from, 1);
         }
+        // Perform insert
+        if (fromTo.to > -1) {
+          // Insert song
+          playlist.playlist.splice(fromTo.to, 0, songToMove);
+        }
+
+        var newNowPlaying = playlist.nowPlaying;
+
+        // Algorithm to find now now playing index
+        if (newNowPlaying === fromTo.from) {
+          newNowPlaying = fromTo.to;
+        } else {
+          if (newNowPlaying > fromTo.from) {
+            newNowPlaying -= 1;
+          }
+
+          if (fromTo.to >= 0 && newNowPlaying >= fromTo.to) {
+            newNowPlaying += 1;
+          }
+        }
+
+        playlist.nowPlaying = newNowPlaying;
 
         var playlistState = {
           list: playlist.playlist,
-          isPlaying: playlist.isPlaying,
-          nowPlaying: playlist.nowPlaying
+          nowPlaying: newNowPlaying
         };
-        //TODO: change to playlist-state event
+
         playlistNSP.to(socket.rooms[0]).emit('playlist-state', playlistState);
 
         playlist.save().catch(handleError);
@@ -551,6 +565,6 @@ module.exports = function(io) {
   });
 
   playlistNSP.on('connection', function (socket) {
-    //console.log(socket.request.user);
+    socket.emit('playlist-connect', 'testing');
   });
 };
