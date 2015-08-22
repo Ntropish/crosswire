@@ -22,7 +22,7 @@ var ioWildcard = require('socketio-wildcard');
 if ( process.argv[2] === 'dev' ) {
   require('./config')();
 }
-mongoose.connect(process.env.MONGOLAB_URI);
+mongoose.connect(process.env.MONGOLAB_URI || process.env.MONGODB_URI);
 
 // ===============================MODELS========================================
 require('./models/playlist.js')(mongoose);
