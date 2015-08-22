@@ -8,7 +8,6 @@ var port = process.env.PORT || 8080;
 
 //================================GET=DEPENDENCIES==============================
 var path =       require('path');
-var morgan =     require('morgan');
 var bodyParser = require('body-parser');
 var http =       require('http');
 var express =    require('express');
