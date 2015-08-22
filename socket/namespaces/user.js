@@ -153,7 +153,6 @@ module.exports = function(io) {
               return socket.emit('authenticate-result', {message: 'Database error.'});
             }
             if (isMatch) {
-              console.log('signing');
               var token = jwt.sign(
                 {username: user.username},
                 process.env.secret,
@@ -293,7 +292,6 @@ module.exports = function(io) {
             {success: true, friendNoMore: data.friendNoMore}
           );
           }, function (reason) {
-            console.log(reason.stack);
             socket.emit('remove-friend-response',
             {success: false, message: reason}
           );
