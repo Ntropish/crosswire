@@ -9,12 +9,14 @@ module.exports = function(io) {
   // Promise returning function to check if user has some permission
   var authorize = function authorize(playlist, user, permission) {
 
+    console.log(playlist.owner, user.username, permission, playlist[permission]);
+
     if (playlist === undefined) {
       return Promise.reject('Playlist is undefined.');
     }
 
     // Anybody is authorized
-    if (playlist[permission] === 0) {
+    if (playlist[permission] === 2) {
       return Promise.resolve(true);
     }
 
@@ -31,21 +33,23 @@ module.exports = function(io) {
       }
       return User.findOne({username: playlist.owner}).exec().then(function (owner) {
         if (owner) {
+          console.log('owner found');
           if (owner.friends.indexOf(user._id) !== -1) {
             return Promise.resolve(true);
           } else {
             return Promise.resolve(false);
           }
         } else {
-          return Promise.reject('owner of playlist not found');
+          return Promise.reject('Owner of playlist not found.');
           // Only the owner is authorized
         }
       }, handleError);
     }
-    else if (playlist[permission] === 2) {
+    else if (playlist[permission] === 0) {
       if (playlist.owner === user.username) {
         return Promise.resolve(true);
       }
+      return Promise.resolve(false);
     }
     // User is not authorized if the previous cases didn't match
     else {
@@ -61,6 +65,20 @@ module.exports = function(io) {
 
   var handleError = function handleError(err){console.log(err);};
 
+  var removeFromUserlist = function removeFromUserlist(username, room) {
+    Playlist.findOne({owner: room}).exec().then(function(playlist){
+      var nameIndex = playlist.userlist.indexOf(username);
+      if ( nameIndex !== -1 ) {
+        playlist.userlist.splice(nameIndex, 1);
+        playlist.save();
+        playlistNSP.to(room).emit('playlist-userlist', {userlist: playlist.userlist});
+      }
+    });
+  };
+
+  var sendPlaylistMessage = function sendPlaylistMessage(playlist, message) {
+      playlistNSP.to(playlist.owner).emit('playlist-message', {message: message});
+  };
   // Session namespace for playlists, rooms are joined with names of playlist owners
   // To join Doug's room join the 'Doug' room in this namespace
   var playlistNSP = io.of('playlist');
@@ -74,6 +92,26 @@ module.exports = function(io) {
 
     // Add wildcard event as JWT middleware
     require('../authenticate-token.js')(socket);
+
+    socket.on('disconnect', function(){
+      console.log('disconnecting:', socket.recentPlaylist, socket.username);
+
+      removeFromUserlist(socket.username, socket.recentPlaylist);
+
+    });
+
+    socket.on('*namechange*', function(data){
+      if (socket.userChange) {
+        // Leave rooms/playlist scocket was in, socket must reauthorize
+        // This event happens before common events so it will not cancel joins
+        socket.rooms.forEach(function(room){
+          // Leave socket.io room
+          socket.leave(room);
+          // Remove username from userlist
+          removeFromUserlist(socket.oldName, room);
+        });
+      }
+    });
 
     socket.on('time-response', function(data){
       playlistNSP.to(socket.rooms[0]).emit('playlist-state', {time: data.time});
@@ -165,11 +203,29 @@ module.exports = function(io) {
               if (room === data.room) {
                 return;
               }
+              // Leave socket.io room
               socket.leave(room);
+              // Remove user from old playlists
+              removeFromUserlist(socket.username, room);
             });
 
             // Join new room/playlist
-            socket.join(data.room);
+            return new Promise(function(resolve, reject){
+              socket.join(data.room, function(err){
+                if (err) {
+                  return reject(err);
+                }
+
+                // Add to userlist
+                if (results.playlist.userlist.indexOf(socket.username) === -1) {
+                  results.playlist.userlist.push(socket.username);
+                  results.playlist.save();
+                }
+                socket.recentPlaylist = data.room;
+                return resolve();
+              });
+            });
+
           }
 
         ]
@@ -184,6 +240,7 @@ module.exports = function(io) {
             'addPermission')
             .then(function(isAuthorized) {
 
+              console.log('joining');
               var playlistReport = {
                 list: results.playlist.playlist,
                 isPlaying: results.playlist.isPlaying,
@@ -191,10 +248,24 @@ module.exports = function(io) {
                 addPermission: isAuthorized
               };
 
+
+              // Send responses to socket
               socket.emit('join-response',
                 {success: true, room: data.room}
               );
               socket.emit('playlist-state', playlistReport);
+
+              
+              socket.emit('permission-update', {
+                join: results.playlist.joinPermission,
+                add: results.playlist.addPermission,
+                modify: results.playlist.modifyPermission
+              });
+
+
+              // Inform playlist room of new user
+              playlistNSP.to(socket.rooms[0]).emit('playlist-userlist',
+                {userlist: results.playlist.userlist});
 
             }, function(err) {
             console.log('auth add error:', err);
@@ -208,6 +279,38 @@ module.exports = function(io) {
           {success: false, message: reason}
         );
       });
+    });
+
+    socket.on('leave', function(data){
+      removeFromUserlist(socket.username, socket.rooms[0]);
+      socket.leave(socket.rooms[0]);
+    });
+
+    socket.on('permissions', function(data){
+      Playlist.findOne({owner: socket.username}).exec().then(
+
+        function(playlist){
+          if (!playlist) {
+            return;
+          }
+          if (typeof data.join === 'number') {
+            playlist.joinPermission = data.join;
+          }
+          if (typeof data.add === 'number') {
+            playlist.addPermission = data.add;
+          }
+          if (typeof data.modify === 'number') {
+            playlist.modifyPermission = data.modify;
+          }
+          playlist.save();
+          playlistNSP.to(socket.username).emit('permission-update', {
+            join: playlist.joinPermission,
+            add: playlist.addPermission,
+            modify: playlist.modifyPermission
+          });
+        });
+    }, function(err){
+      console.log(err);
     });
 
     /*==========================================================================

@@ -276,8 +276,6 @@ module.exports = function(io) {
         },
         function(data) {
           var friendIndex = data.user.friends.indexOf(data.friend._id);
-          console.log(data.user.friends);
-          console.log(data.friend._id);
           if (friendIndex !== -1) {
             data.user.friends.splice(friendIndex, 1);
             return data.user.save();
@@ -292,7 +290,7 @@ module.exports = function(io) {
         }, Promise.resolve())
           .then(function () {
             socket.emit('remove-friend-response',
-            {success: true}
+            {success: true, friendNoMore: data.friendNoMore}
           );
           }, function (reason) {
             console.log(reason.stack);

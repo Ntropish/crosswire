@@ -12,6 +12,7 @@
       args.push(this.ack(packet.id));
     }
     emit.call(this, '*', packet);
+    emit.call(this, '*namechange*', packet);
     emit.apply(this, args);
   };
 

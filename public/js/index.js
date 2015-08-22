@@ -9,6 +9,7 @@ angular.module('index', [])
     $scope.token = null;
     $scope.loggedInUsername = '';
     $scope.activeTab = 0;
+    $scope.activeUserTab = 0;
     $scope.showUserBox = false;
     $scope.friends = [];
 
@@ -24,15 +25,16 @@ angular.module('index', [])
     $scope.currentSong = '';
     $scope.currentSongDomain = '';
     $scope.volume = 50;
+    $scope.userlist = [];
 
-    $scope.flashYouButton = true;
+    $scope.permissions = {join: -1, add: -1, modify: -1};
 
     $scope.scrollConsoleTitle = false;
     $scope.showAlert = false;
     $scope.alertTimeouts = [];
 
 
-    // Handle song drag and drop here
+    // Handle song drag and drop
     document.addEventListener('dragstart', function(event){
       var dragged = event.target;
       dragged.style.opacity = 0.5;
@@ -52,7 +54,7 @@ angular.module('index', [])
     });
 
 
-    // Title overflow management
+    // Song title overflow management
     var consoleTitle = $('#current-song-title');
     var consoleTitleHeader = $('#current-song-title>span');
 
@@ -78,21 +80,35 @@ angular.module('index', [])
     // Object to hold user actions, interface event handlers
     var actions = $scope.actions = {};
 
+    // Connect to sockets
     var conditionalColon = window.location.port ? ':' : '' ;
     var userSocket = io.connect(conditionalColon+window.location.port+'/user');
-    var playlistSocket = io.connect(conditionalColon+window.location.port+'/playlist', {query: 'room='+$scope.room});
+    var playlistSocket = io.connect(conditionalColon+window.location.port+'/playlist');
 
+    // Flags
+
+    //TODO: This flag is to be removed
+    $scope.flashYouButton = true;
+    // This is set when first joining a room, time will be innacurate and
+    // most likely the request came from this client anyways so ignore it
     var timeRequestIgnore = false;
+    // This flag lets the client know the first time the user plays a song
+    // upon joining a room so that a time correction is performed.
+    // This corrects problems with joining a room where the song is
+    // paused. An unplayed soundcloud widget cannot adjust the time so
+    // it must correct it upon first play
     var firstPlay = true;
+    // This flag is checked when a playlist-state event updates the time so that
+    // time updates (calling SCcorrectTime function) can rely on this condition
     var timeUpdated = false;
 
+    // DOM element that shows messages to the user
     var alertBox = $('#alert-box');
 
-    var host2widgetBaseUrl = {
-      "wt.soundcloud.dev" : "wt.soundcloud.dev:9200/",
-      "wt.soundcloud.com" : "wt.soundcloud.com/player/",
-      "w.soundcloud.com"  : "w.soundcloud.com/player/"
-    };
+    //==========================================================================
+    // INITIALIZE SoundCLoud SDK AND WIDGET
+    //==========================================================================
+
     var songIframe = document.querySelector('#SCwidget');
     var SCwidget = SC.Widget(songIframe);
     SC.initialize({client_id: '4d31f97b23c646bc260647f88f7ed08e'});
@@ -141,10 +157,6 @@ angular.module('index', [])
       }
     });
 
-    SCwidget.bind(SC.Widget.Events.PLAY_PROGRESS, function(data){
-
-    });
-
     SCwidget.bind(SC.Widget.Events.SEEK, function(data){
       // Send current position on a transport event
       var sendData = {token: $scope.token, time: data.currentPosition};
@@ -158,6 +170,10 @@ angular.module('index', [])
         playlistSocket.emit('change', sendData);
       }
     });
+
+    //==========================================================================
+    // MISC APPLICATION FUNCTIONS
+    //==========================================================================
 
     var displayMessage = function displayMessage(msg) {
 
@@ -189,8 +205,31 @@ angular.module('index', [])
 
     };
 
-    var getSongDomain = function getSongDomain() {
+    var validateSongDomain = function getSongDomain(newSong) {
+      var SCdomains = [
+        'soundcloud.com',
+        'www.soundcloud.com',
+        'w.soundcloud.com'
+      ];
+      // Youtube
+      var YTdomains = [];
 
+      var domain = newSong.url.split('/')[2];
+      console.log('domain:', domain);
+
+      // Check if domain is in the valid domain
+      // lists and set current song domain
+      var isValidDomain = false;
+      if( SCdomains.indexOf(domain) !== -1 ) {
+        isValidDomain = true;
+        $scope.currentSongDomain = 'soundcloud';
+      }
+      else if( YTdomains.indexOf(domain) !== -1) {
+        isValidDomain = true;
+        $scope.currentSongDomain = 'youtube';
+      }
+
+      return isValidDomain;
     };
 
     var SCcorrectTime = function SCcurrectTime() {
@@ -228,41 +267,20 @@ angular.module('index', [])
       }
       var newSong = $scope.list[$scope.nowPlaying];
 
+
       // If there is no current song but there is a new one,
       // or songs are different, process new url
       if ((!$scope.currentSong && newSong) ||
         $scope.currentSong._id !== newSong._id) {
+
         // URL has changed, begin processing new URL
-
-        // Define valid domains
-        // SoundCloud
-        var SCdomains = [
-          'soundcloud.com',
-          'www.soundcloud.com',
-          'w.soundcloud.com'
-        ];
-        // Youtube
-        var YTdomains = [];
-
-        var domain = newSong.url.split('/')[2];
-        console.log('domain:', domain);
-
-        // Check if domain is in the valid domain
-        // lists and set current song domain
-        var isValidDomain = false;
-        if( SCdomains.indexOf(domain) !== -1 ) {
-          isValidDomain = true;
-          $scope.currentSongDomain = 'soundcloud';
-        }
-        else if( YTdomains.indexOf(domain) !== -1) {
-          isValidDomain = true;
-          $scope.currentSongDomain = 'youtube';
-        }
+        // All songs added through the actions.add function should be valid
 
         // Handle case of invalid domain
-        if (!isValidDomain) {
+        if (!validateSongDomain(newSong)) {
           displayMessage('Invalid song, removing.');
           actions.remove($scope.nowPlaying);
+          return;
         }
 
         $scope.currentSong = newSong;
@@ -322,11 +340,32 @@ angular.module('index', [])
       }
     };
 
+    //==========================================================================
+    // SOCKET.IO EVENT HANDLERS
+    //==========================================================================
+
+    playlistSocket.on('permission-update', function(data){
+      if (typeof data.join === 'number') $scope.permissions.join = data.join;
+      if (typeof data.add === 'number') $scope.permissions.add = data.add;
+      if (typeof data.modify === 'number') $scope.permissions.modify = data.modify;
+      console.log($scope.permissions);
+      $scope.$apply();
+    });
+
+    playlistSocket.on('playlist-userlist', function(data){
+      $scope.userlist = data.userlist;
+      $scope.$apply();
+    });
+
     playlistSocket.on('playlist-connect', function(){
       if ($scope.room) {
         console.log('trying to rejoin');
         actions.join($scope.room);
       }
+    });
+
+    playlistSocket.on('playlist-error', function(data){
+
     });
 
     playlistSocket.on('time-request', function(){
@@ -361,7 +400,6 @@ angular.module('index', [])
           timeRequestIgnore = false;
         }, 2000);
 
-        $scope.showUserBox = false;
         $scope.$apply();
       }
       else {
@@ -370,8 +408,8 @@ angular.module('index', [])
       }
     });
 
-    playlistSocket.on('playlist-error', function(error){
-      console.log(error);
+    playlistSocket.on('playlist-error', function(data){
+      displayMessage(data.message);
     });
 
     playlistSocket.on('playlist-state', function(playlistState){
@@ -474,7 +512,31 @@ angular.module('index', [])
       }
     });
 
-    // DEFINE USER ACTIONS
+    userSocket.on('remove-friend-response', function(data) {
+      if (data.success) {
+        $scope.friends.splice($scope.friends.indexOf(data.friendNoMore), 1);
+        displayMessage('Removed friend.');
+      } else {
+        displayMessage(data.message);
+      }
+      $scope.$apply();
+
+    });
+
+    //==========================================================================
+    // CROSSWIRE INTERFACE ACTIONS
+    //==========================================================================
+
+    actions.updatePermissions = function updatePermissions(newPermission) {
+
+      var sendData = {token: $scope.token,
+        join: newPermission.join,
+        add: newPermission.add,
+        modify: newPermission.modify
+       };
+      playlistSocket.emit('permissions', sendData);
+    };
+
     actions.join = function join(room) {
       var sendData = {token: $scope.token, room: room};
       playlistSocket.emit('join', sendData);
@@ -565,8 +627,14 @@ angular.module('index', [])
     };
 
     actions.addFriend = function addFriend(name) {
-      var data = {token: $scope.token, friendToBe: $scope.friendName };
+      var data = {token: $scope.token, friendToBe: name };
       userSocket.emit('add-friend', data);
+    };
+
+    actions.removeFriend = function removeFriend(index) {
+      console.log($scope.friends[index]);
+      var data = {token: $scope.token, friendNoMore: $scope.friends[index] };
+      userSocket.emit('remove-friend', data);
     };
 
     actions.updateVolume = function updateVolume() {
@@ -575,7 +643,29 @@ angular.module('index', [])
       }
     };
 
+    actions.leave = function leave() {
+      $scope.urlToAdd = '';
+      $scope.desiredRoom = '';
+      $scope.room = '';
+      $scope.list = {};
+      $scope.isPlaying = false;
+      $scope.nowPlaying = -1;
+      $scope.time = 0;
+      $scope.addPermission = false;
+      $scope.currentSong = '';
+      $scope.currentSongDomain = '';
+      playlistSocket.emit('leave');
+
+      // Update $scope.currentSong and load new song if it changed
+      updateSongInWidget();
+
+      // Update widget to math state
+      fixWidgetDiscrepancies();
+
+    };
+
     actions.logout = function logout(){
+      playlistSocket.emit('leave');
       $scope.username = '';
       $scope.password = '';
       $scope.confirmPassword = '';
@@ -583,7 +673,6 @@ angular.module('index', [])
       $scope.token = null;
       $scope.loggedInUsername = '';
       $scope.activeTab = 0;
-      $scope.showUserBox = false;
       $scope.friends = [];
 
       // Playlist variables
@@ -598,8 +687,12 @@ angular.module('index', [])
       $scope.currentSong = '';
       $scope.currentSongDomain = '';
       displayMessage("Bye, have fun!");
+
+      // Update $scope.currentSong and load new song if it changed
+      updateSongInWidget();
+
+      // Update widget to math state
+      fixWidgetDiscrepancies();
     };
 
   }]);
-$(document).ready(function(){
-});

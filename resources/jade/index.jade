@@ -6,38 +6,8 @@ html
   link(href='https://fonts.googleapis.com/css?family=Sarala:400,700' rel='stylesheet' type='text/css')
   link(rel='stylesheet' type='text/css' href='https://fonts.googleapis.com/css?family=Open+Sans:400,300')
   link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css")
- body
-  div#container(ng-app="index" ng-controller="SongShareCtrl as controller")
-  
-    div#user(ng-show="showUserBox" ng-cloak)
-      h2 {{ loggedInUsername }}
-      div#login-and-registration(ng-show="!token")
-        div#login-and-registration-tabs
-          button#login-tab(ng-click="activeTab = 0" ng-class="{'active-tab': activeTab == '0'}" class="tab-button") Login
-          button#register-tab(ng-click="activeTab = 1" ng-class="{'active-tab': activeTab == '1'}" class="tab-button") Register
-        form#login(ng-show="activeTab === 0")
-          input.login-input(type="text" ng-model="username" placeholder="Username")
-          input.login-input(type="password" ng-model="password" placeholder="Password")
-          button#login-button(ng-click="actions.login(username, password)") Login
-        form#register(ng-show="activeTab === 1")
-          input.login-input(type="text" ng-model="username" placeholder="Username")
-          input.login-input(type="password" ng-model="password" placeholder="Password")
-          input.login-input(type="password" 
-            ng-model="confirmPassword" 
-            placeholder="Confirm" )
-          button#register-button(ng-click="actions.register(username, password)") Register
-      div#friend-section(ng-show="token")
-        h3.friends-title Friends
-        form#friend-adder
-          input(type="text" ng-model="friendName" placeholder="Name")
-          button(ng-click="actions.addFriend(friendName)")
-            i(class="fa fa-plus")
-        ul.friend-list
-          li.friend(ng-repeat="friend in friends" class="round-list") {{ friend }}
-      div#user-actions(ng-show="token")
-        button#make-room(ng-click="actions.join(loggedInUsername)") Join Your Room
-        button#log-out(ng-click="actions.logout()") Logout
-      
+ body(ng-app="index" ng-controller="SongShareCtrl as controller")
+    
     div#alert-box(ng-class="{'alert-flash': showAlert }") 
   
     section#header
@@ -46,65 +16,159 @@ html
         | wire
       div#room-joiner
         input(type="text" ng-model="desiredRoom" placeholder="Room")
-        button(ng-click="actions.join(desiredRoom)") Join Room
+        button(ng-click="actions.join(desiredRoom)") Join
       button#you-button(ng-click="showUserBox = !showUserBox; flashYouButton = false" 
         class="glow"
         ng-class="{'flash-you-button': flashYouButton}"
-        ng-cloak) {{ token?"You":"Log in!"}}
+        ng-cloak) 
+        div {{ token?"":"Log in!"}}
+        i(class="fa fa-chevron-right" 
+        ng-show="token"
+        ng-class="{'user-expand-symbol': showUserBox, 'user-collapse-symbol': !showUserBox}"
+        style="color: #666")
+        |  
+        i(class="fa fa-bars" ng-show="token" style="font-size: 2em; color: #666")
+        
 
     section#body(ng-cloak)
-      div#media-controller(ng-show="room")
-        div.media-controller-console
-          button(ng-click="actions.playPause(true)") 
-            i(class="fa fa-play")
-          button(ng-click="actions.playPause(false)")
-            i(class="fa fa-pause")
-          button(ng-click="actions.change(nowPlaying - 1)")
-            i(class="fa fa-step-backward")
-          button(ng-click="actions.change(nowPlaying + 1)")
-            i(class="fa fa-step-forward") 
-          div.volume-control
-            i.volume-icon(class="fa fa-volume-off" ng-show="volume < 10")
-            i.volume-icon(class="fa fa-volume-down" ng-show="volume >= 10 && volume <= 90")
-            i.volume-icon(class="fa fa-volume-up" ng-show="volume > 90")
-            input(ng-model="volume" type="range" minimum="0" maximum="100" ng-change="actions.updateVolume()")
+      div#user(ng-show="showUserBox" ng-cloak)
+        div#login-and-registration(ng-show="!token")
+          div#login-and-registration-tabs
+            button#login-tab(ng-click="activeTab = 0" ng-class="{'active-tab': activeTab == '0'}" class="tab-button") Login
+            button#register-tab(ng-click="activeTab = 1" ng-class="{'active-tab': activeTab == '1'}" class="tab-button") Register
+          form#login(ng-show="activeTab === 0")
+            input.login-input(type="text" ng-model="username" placeholder="Username")
+            input.login-input(type="password" ng-model="password" placeholder="Password")
+            button#login-button(ng-click="actions.login(username, password)") Login
+          form#register(ng-show="activeTab === 1")
+            input.login-input(type="text" ng-model="username" placeholder="Username")
+            input.login-input(type="password" ng-model="password" placeholder="Password")
+            input.login-input(type="password" 
+              ng-model="confirmPassword" 
+              placeholder="Confirm" )
+            button#register-button(ng-click="actions.register(username, password)") Register
+        div#user-panel(ng-show="token")
+          div#user-tabs
+            button#user-tab(class="user-tab" 
+            ng-class="{'active-user-tab': activeUserTab === 0}" 
+            ng-click="activeUserTab = 0") You
+            button#friend-tab(class="user-tab" 
+            ng-class="{'active-user-tab': activeUserTab === 1}"
+            ng-click="activeUserTab = 1") Friends
+            button#room-tab(class="user-tab" 
+            ng-class="{'active-user-tab': activeUserTab === 2}"
+            ng-click="activeUserTab = 2") Room
+          div#user-section(ng-show="activeUserTab === 0")
+            h4 {{ loggedInUsername }}
+            button#make-room(ng-click="actions.join(loggedInUsername)" ng-show="room !== loggedInUsername") Join Your Room
+            button#log-out(ng-click="actions.logout()") Logout
+          div#friend-section(ng-show="activeUserTab === 1")
+            form#friend-adder
+              input(type="text" ng-model="friendName" placeholder="Name")
+              button(ng-click="actions.addFriend(friendName)")
+                i(class="fa fa-plus")
+            ul.friend-list
+              li.friend(ng-repeat="friend in friends" class="round-list") {{ friend }}
+                button(ng-click="actions.removeFriend($index)")
+                  i(class="fa fa-times")
+          div#room-section(ng-show="activeUserTab === 2 && room")
+            div#room-title {{ room }} room
+            ul.room-user-list
+              li.room-user(ng-repeat="user in userlist" class="round-list") {{ user }}
+            div#room-permissions
+              h3 Permissions
+              div.permission 
+                div(title="Join playlist") Join
+                button(ng-class="{'selected-option': permissions.join === 0}"
+                  ng-click="actions.updatePermissions({join: 0})"
+                  ng-disabled="room !== loggedInUsername"
+                  ) Owner
+                button(ng-class="{'selected-option': permissions.join === 1}"
+                  ng-click="actions.updatePermissions({join: 1})"
+                  ng-disabled="room !== loggedInUsername"
+                  ) Friends
+                button(ng-class="{'selected-option': permissions.join === 2}"
+                  ng-click="actions.updatePermissions({join: 2})"
+                  ng-disabled="room !== loggedInUsername"
+                  ) All
+              div.permission
+                div(title="Add songs") Add
+                button(ng-class="{'selected-option': permissions.add === 0}"
+                  ng-click="actions.updatePermissions({add: 0})"
+                  ng-disabled="room !== loggedInUsername"
+                  ) Owner
+                button(ng-class="{'selected-option': permissions.add === 1}"
+                  ng-click="actions.updatePermissions({add: 1})"
+                  ng-disabled="room !== loggedInUsername"
+                  ) Friends
+                button(ng-class="{'selected-option': permissions.add === 2}"
+                  ng-click="actions.updatePermissions({add: 2})"
+                  ng-disabled="room !== loggedInUsername"
+                  ) All
+              //div.permission
+              //  div(title="Modify playlist") Mod
+              //  button(ng-class="{'selected-option': permissions.modify === 0}") Owner
+              //  button(ng-class="{'selected-option': permissions.modify === 1}") Friends
+              //  button(ng-class="{'selected-option': permissions.modify === 2}") All
+            button.leave-room(ng-click="actions.leave()") Leave
+
+    
+      div#container(ng-cloak ng-class="{'container-collapse': showUserBox}")
+        div#media-controller(ng-show="room")
           div#current-song-title()
             |  
             span(ng-show="currentSong.title" ng-class="{'scroll-title':scrollConsoleTitle}" data-offset="-500")
               |   {{ currentSong.title }}
-      div#list-player-holder(ng-show="room")
-        div#song-list
-          div#song-adder
-            input(type="text" ng-model="urlToAdd" placeholder="SoundCloud URL")
-            button(ng-click="actions.add(urlToAdd)") Add
-          ul#songs
-            li.song-item(draggable="true" 
-              ondragover="return false"
-              ng-repeat="song in list" 
-              class="round-list" 
-              ng-attr-data-index="{{$index}}"
-              )
-              div.song-controls
-                div.move-this-song(title="Move song")
-                  i(class="fa fa-ellipsis-v")
-                button.change-song(title="Change to this song"  ng-click="actions.change($index)")
-                  i(class="fa fa-arrow-right" ng-class="{'current-song':$index === nowPlaying}")
+          div.media-controller-console
 
-              span.song-name {{ song.title }}
-              button(ng-click="actions.remove($index)") X
-          
-        div#player-container(ng-show="currentSongDomain")
-          iframe#SCwidget(class="iframe"
-                width="100%"
-                height="100%"
-                scrolling="no"
-                frameborder="no"
-                src="https://w.soundcloud.com/player/?url=none")
-              
-      div#landing-message(ng-show="!room")
-        h2 Welcome to crosswire
-        p Sign in, join a playlist, or make 
-          | one to share with friends!
+            button(ng-click="actions.playPause(true)") 
+              i(class="fa fa-play")
+            button(ng-click="actions.playPause(false)")
+              i(class="fa fa-pause")
+            button(ng-click="actions.change(nowPlaying - 1)")
+              i(class="fa fa-step-backward")
+            button(ng-click="actions.change(nowPlaying + 1)")
+              i(class="fa fa-step-forward") 
+            div.volume-control
+              i.volume-icon(class="fa fa-volume-off" ng-show="volume < 10")
+              i.volume-icon(class="fa fa-volume-down" ng-show="volume >= 10 && volume <= 90")
+              i.volume-icon(class="fa fa-volume-up" ng-show="volume > 90")
+              input(ng-model="volume" type="range" minimum="0" maximum="100" ng-change="actions.updateVolume()")
+
+        div#list-player-holder(ng-show="room")
+          div#song-list
+            div#song-adder
+              input(type="text" ng-model="urlToAdd" placeholder="SoundCloud URL")
+              button(ng-click="actions.add(urlToAdd)") Add
+            ul#songs
+              li.song-item(draggable="true" 
+                ondragover="return false"
+                ng-repeat="song in list" 
+                class="round-list" 
+                ng-attr-data-index="{{$index}}"
+                )
+                div.song-controls
+                  div.move-this-song(title="Move song")
+                    i(class="fa fa-ellipsis-v")
+                  button.change-song(title="Change to this song"  ng-click="actions.change($index)")
+                    i(class="fa fa-arrow-right" ng-class="{'current-song':$index === nowPlaying}")
+
+                span.song-name {{ song.title }}
+                button(ng-click="actions.remove($index)")
+                  i(class="fa fa-times")
+            
+          div#player-container(ng-show="currentSongDomain")
+            iframe#SCwidget(class="iframe"
+                  width="100%"
+                  height="100%"
+                  scrolling="no"
+                  frameborder="no"
+                  src="https://w.soundcloud.com/player/?url=none")
+                
+        div#landing-message(ng-show="!room")
+          h2 Welcome to crosswire
+          p Sign in, join a playlist, or make 
+            | one to share with friends!
 
     
     div#hidden(ng-show="false")

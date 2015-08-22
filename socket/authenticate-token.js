@@ -15,6 +15,22 @@ module.exports = function(socket) {
             resolve(decoded);
           }
         });
+      }).then(function(decodedToken){
+
+        // Identify name changes on the socket
+        if (socket.username && socket.username !== decodedToken.username) {
+          socket.userChanged = true;
+          // Track old name for removing from user lists
+          socket.oldName = socket.username;
+        }
+        else {
+          socket.userChanged = false;
+        }
+
+        // Save username to the socket so playlist namespace can track disconnects
+        socket.username = decodedToken.username;
+
+        return decodedToken;
       });
     } else {
       event.data[1].payload = Promise.reject('No token given');
