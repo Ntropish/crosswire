@@ -18,9 +18,8 @@ var ioWildcard = require('socketio-wildcard');
 
 //================================MISC=CONFIG===================================
 
-if ( process.argv[2] === 'dev' ) {
-  require('./config')();
-}
+require('./config')();
+
 mongoose.connect(process.env.MONGOLAB_URI || process.env.MONGODB_URI);
 
 // ===============================MODELS========================================
