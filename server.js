@@ -53,7 +53,7 @@ require('./socket/namespaces/user.js')(io);
 //==============================================================================
 //================================MAKE=SERVER===================================
 var httpServer = http.createServer(app); //OPTIONS HERE
-io.listen(httpsServer);
+io.listen(httpServer);
 //================================START=SERVER==================================
 httpServer.listen(port);
 console.log('listening on port:', port);

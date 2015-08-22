@@ -9,8 +9,6 @@ module.exports = function(io) {
   // Promise returning function to check if user has some permission
   var authorize = function authorize(playlist, user, permission) {
 
-    console.log(playlist.owner, user.username, permission, playlist[permission]);
-
     if (playlist === undefined) {
       return Promise.reject('Playlist is undefined.');
     }
@@ -33,7 +31,6 @@ module.exports = function(io) {
       }
       return User.findOne({username: playlist.owner}).exec().then(function (owner) {
         if (owner) {
-          console.log('owner found');
           if (owner.friends.indexOf(user._id) !== -1) {
             return Promise.resolve(true);
           } else {
@@ -94,7 +91,6 @@ module.exports = function(io) {
     require('../authenticate-token.js')(socket);
 
     socket.on('disconnect', function(){
-      console.log('disconnecting:', socket.recentPlaylist, socket.username);
 
       removeFromUserlist(socket.username, socket.recentPlaylist);
 
@@ -239,8 +235,6 @@ module.exports = function(io) {
             results.user,
             'addPermission')
             .then(function(isAuthorized) {
-
-              console.log('joining');
               var playlistReport = {
                 list: results.playlist.playlist,
                 isPlaying: results.playlist.isPlaying,
@@ -255,7 +249,7 @@ module.exports = function(io) {
               );
               socket.emit('playlist-state', playlistReport);
 
-              
+
               socket.emit('permission-update', {
                 join: results.playlist.joinPermission,
                 add: results.playlist.addPermission,
@@ -267,14 +261,10 @@ module.exports = function(io) {
               playlistNSP.to(socket.rooms[0]).emit('playlist-userlist',
                 {userlist: results.playlist.userlist});
 
-            }, function(err) {
-            console.log('auth add error:', err);
-          }
-
+            }
         );
 
         }, function (reason) {
-          console.log(reason.stack);
           socket.emit('join-response',
           {success: false, message: reason}
         );
@@ -387,7 +377,6 @@ module.exports = function(io) {
           // Save playlist document
           playlist.save().catch(handleError);
         }, function(err){
-          console.log(err);
           socket.emit('playlist-error', {message: err});
         });
 
