@@ -8,7 +8,6 @@ var port = process.env.PORT || 8080;
 
 //================================GET=DEPENDENCIES==============================
 var path =       require('path');
-var bodyParser = require('body-parser');
 var http =       require('http');
 var express =    require('express');
 var io =         require('socket.io')();
@@ -33,8 +32,6 @@ var app = express();
 
 // Statically serve public directory
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
 
 // Serve SPA
 app.get('/', function(req, res){
