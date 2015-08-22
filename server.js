@@ -2,25 +2,15 @@
 //                                  CROSS WIRE
 //==============================================================================
 
-//==================================CONFIGURE=KEYS==============================
-var fs = require('fs');
-
-var hskey = fs.readFileSync('./keys/keys01/ntropish-key.pem');
-var hscert = fs.readFileSync('./keys/keys01/ntropish-cert.pem');
-
-var options = {
-  key: hskey,
-  cert: hscert
-};
 
 //================================GET=PORT======================================
-var port = process.env.PORT || 3000;
+var port = process.env.PORT || 8080;
 
 //================================GET=DEPENDENCIES==============================
 var path =       require('path');
 var morgan =     require('morgan');
 var bodyParser = require('body-parser');
-var http =      require('http');
+var http =       require('http');
 var express =    require('express');
 var io =         require('socket.io')();
 var mongoose =   require('mongoose');
@@ -50,7 +40,6 @@ app.use(bodyParser.json());
 
 // Serve SPA
 app.get('/', function(req, res){
-  //res.send('index');
   res.sendFile('index.html', {root: path.join(__dirname, 'public', 'html')});
 });
 
@@ -65,8 +54,8 @@ require('./socket/namespaces/user.js')(io);
 
 //==============================================================================
 //================================MAKE=SERVER===================================
-var httpsServer = http.createServer(app); //OPTIONS HERE
+var httpServer = http.createServer(app); //OPTIONS HERE
 io.listen(httpsServer);
 //================================START=SERVER==================================
-httpsServer.listen(port);
+httpServer.listen(port);
 console.log('listening on port:', port);
