@@ -166,7 +166,7 @@ module.exports = function(io) {
             } else if(results.user.username === data.room) {
               // Create playlist if user is trying to join their own room
               // and it is non existent.
-              Playlist.create(
+              return Playlist.create(
                 {owner: results.user.username},
                 function (err, newPlaylist) {
                   if (err) {
