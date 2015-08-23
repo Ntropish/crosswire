@@ -194,7 +194,7 @@ button
   height: 100%
   position: absolute
   box-sizing: border-box
-  background-color: $color-2
+  background-color: $color-3
   box-shadow: 0 1px 2px $color-light-shadow
   top: 0
   right: 0
@@ -202,6 +202,8 @@ button
   &>h2
     text-align: center
     margin: 0
+
+.g-recaptcha
 
 #login-and-registration
   width: 100%
@@ -255,6 +257,11 @@ button
   background-color: $color-3
   &:hover
     background-color: darken($color-3, 10%)
+
+#register
+  display: flex
+  flex-direction: column
+  align-items: center
 
 #user-panel
   width: 100%
@@ -519,10 +526,10 @@ button
 
 @media screen and (min-width: 40em)
   #user
-    width: 25%
+    width: 20em
 
   #container.container-collapse
-    width: 75%
+    width: calc(100% - 20em)
 
   #song-list
     height: calc(100% - 1em)

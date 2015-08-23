@@ -169,7 +169,7 @@ button {
   height: 100%;
   position: absolute;
   box-sizing: border-box;
-  background-color: #30303f;
+  background-color: #efefef;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   top: 0;
   right: 0;
@@ -228,6 +228,11 @@ button {
   background-color: #efefef; }
   #login-button:hover, #register-button:hover {
     background-color: #d5d5d5; }
+
+#register {
+  display: flex;
+  flex-direction: column;
+  align-items: center; }
 
 #user-panel {
   width: 100%;
@@ -482,9 +487,9 @@ button {
 
 @media screen and (min-width: 40em) {
   #user {
-    width: 25%; }
+    width: 20em; }
   #container.container-collapse {
-    width: 75%; }
+    width: calc(100% - 20em); }
   #song-list {
     height: calc(100% - 1em); }
   #list-player-holder {
