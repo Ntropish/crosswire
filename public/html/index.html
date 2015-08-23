@@ -6,6 +6,7 @@
     <link href="https://fonts.googleapis.com/css?family=Sarala:400,700" rel="stylesheet" type="text/css">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans:400,300">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <script src="https://www.google.com/recaptcha/api.js"></script>
   </head>
   <body ng-app="index" ng-controller="SongShareCtrl as controller">
     <div id="alert-box" ng-class="{'alert-flash': showAlert }"> </div>
@@ -35,6 +36,7 @@
             <input type="text" ng-model="username" placeholder="Username" class="login-input">
             <input type="password" ng-model="password" placeholder="Password" class="login-input">
             <input type="password" ng-model="confirmPassword" placeholder="Confirm" class="login-input">
+            <div data-sitekey="6Lf_SQsTAAAAAMXWN-vZFzrxKcFXgfsXJs7V1QeO" class="g-recaptcha"></div>
             <button id="register-button" ng-click="actions.register(username, password)">Register</button>
           </form>
         </div>

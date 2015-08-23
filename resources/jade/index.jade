@@ -6,6 +6,7 @@ html
   link(href='https://fonts.googleapis.com/css?family=Sarala:400,700' rel='stylesheet' type='text/css')
   link(rel='stylesheet' type='text/css' href='https://fonts.googleapis.com/css?family=Open+Sans:400,300')
   link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css")
+  script(src='https://www.google.com/recaptcha/api.js')
  body(ng-app="index" ng-controller="SongShareCtrl as controller")
     
     div#alert-box(ng-class="{'alert-flash': showAlert }") 
@@ -46,6 +47,7 @@ html
             input.login-input(type="password" 
               ng-model="confirmPassword" 
               placeholder="Confirm" )
+            div(class="g-recaptcha" data-sitekey="6Lf_SQsTAAAAAMXWN-vZFzrxKcFXgfsXJs7V1QeO")
             button#register-button(ng-click="actions.register(username, password)") Register
         div#user-panel(ng-show="token")
           div#user-tabs

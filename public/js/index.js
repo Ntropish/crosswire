@@ -3,8 +3,8 @@ angular.module('index', [])
   .controller('SongShareCtrl', ['$scope', function($scope){
     // User variables
     $scope.username = '';
-    $scope.password = '';
-    $scope.confirmPassword = '';
+    $scope.password = 'Batter1es!';
+    $scope.confirmPassword = 'Batter1es!';
     $scope.friendName = '';
     $scope.token = null;
     $scope.loggedInUsername = '';
@@ -613,8 +613,13 @@ angular.module('index', [])
 
     actions.register = function register(username, password) {
       if ($scope.password === $scope.confirmPassword) {
-        var data = {token: $scope.token, username: username, password: password};
+        var data = {token: $scope.token,
+          username: username,
+          password: password,
+          gresponse: grecaptcha.getResponse()
+        };
         userSocket.emit('register', data);
+        grecaptcha.reset();
       } else {
         displayMessage('Those passwords don\'t match!');
       }

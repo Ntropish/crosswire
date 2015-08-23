@@ -2,6 +2,8 @@ var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var jwt = require('jsonwebtoken');
 var ioWildcard = require('../socketio-pre-event');
+var http = require('https');
+var querystring = require('querystring');
 
 module.exports = function(io) {
   'use strict';
@@ -11,10 +13,13 @@ module.exports = function(io) {
 
   userNSP.use(function(socket, next){
 
+
+
     // Use JWT middleware
     require('../authenticate-token.js')(socket);
 
     socket.on('register', function(data){
+
       var validatePassword = function validatePassword(password) {
         // This function is synchronous
         // Runs a series of checks with regex, if all tests pass
@@ -96,15 +101,46 @@ module.exports = function(io) {
       if (passwordValid.success) {
         validateUsername(username).then(function(result){
           if (result.success) {
-            createUser(username, password).then(function(){
-              // Emit result after save so the client doesn't
-              // attept login before user is in database
-              socket.emit('register-result', result);
+
+            // Make request to verify recaptcha
+            var post_data = querystring.stringify({
+              secret: process.env.recaptcha_secret,
+              response: data.gresponse,
+              remoteip: socket.request.socket.remoteAddress
             });
+
+            var post_options = {
+              host: 'www.google.com',
+              port: 443,
+              path: '/recaptcha/api/siteverify',
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': post_data.length
+              }
+            };
+
+            var postRequest = http.request(post_options, function(res){
+              res.on('data', function(chunk){
+                if (Boolean(JSON.parse(chunk.toString()).success)) {
+
+                  // MAKE USER AND SEND RESPONSE
+                  createUser(username, password).then(function(){
+                    // Emit result after save so the client doesn't
+                    // attept login before user is in database
+                    socket.emit('register-result', result);
+                  });
+                }
+              });
+            });
+
+            postRequest.write(post_data);
+            postRequest.end();
+
           } else {
             socket.emit('register-result', result);
           }
-        });
+        }, function(err){console.log(err);});
       } else {
         socket.emit('register-result', passwordValid);
       }
