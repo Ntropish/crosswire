@@ -20,8 +20,8 @@
   <section id="header">
     <h2> <strong>cross</strong>wire</h2>
     <div id="room-joiner">
-      <input type="text" ng-model="desiredRoom" placeholder="Room">
-      <button ng-click="actions.join(desiredRoom)">Join</button>
+      <input type="text" ng-model="desiredRoom" placeholder="Name">
+      <button ng-click="actions.join(desiredRoom)" title="By default this person must add you before you can join them">Join</button>
     </div>
     <button id="you-button" ng-click="showUserBox = !showUserBox" ng-cloak class="glow"> 
       <div id="you-button-container"><span>{{ token?"":"Log in!"}}</span><i ng-show="token" ng-class="{'user-expand-symbol': showUserBox, 'user-collapse-symbol': !showUserBox}" style="color: #666" class="fa fa-chevron-right"></i> <i ng-show="token" style="font-size: 2em; color: #666" class="fa fa-bars"></i></div>

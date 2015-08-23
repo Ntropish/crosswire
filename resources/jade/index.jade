@@ -23,8 +23,8 @@ body(ng-app="index" ng-controller="SongShareCtrl as controller")
         strong cross
         | wire
       div#room-joiner
-        input(type="text" ng-model="desiredRoom" placeholder="Room")
-        button(ng-click="actions.join(desiredRoom)") Join
+        input(type="text" ng-model="desiredRoom" placeholder="Name")
+        button(ng-click="actions.join(desiredRoom)" title="By default this person must add you before you can join them") Join
       button#you-button(ng-click="showUserBox = !showUserBox" 
         class="glow"
         ng-cloak) 
