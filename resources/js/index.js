@@ -3,8 +3,8 @@ angular.module('index', [])
   .controller('SongShareCtrl', ['$scope', function($scope){
     // User variables
     $scope.username = '';
-    $scope.password = 'Batter1es!';
-    $scope.confirmPassword = 'Batter1es!';
+    $scope.password = '';
+    $scope.confirmPassword = '';
     $scope.friendName = '';
     $scope.token = null;
     $scope.loggedInUsername = '';
