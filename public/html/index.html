@@ -106,10 +106,10 @@
         </div>
         <div id="list-player-holder" ng-show="room">
           <div id="song-list">
-            <div id="song-adder">
+            <form id="song-adder">
               <input type="text" ng-model="urlToAdd" placeholder="SoundCloud URL">
               <button ng-click="actions.add(urlToAdd)">Add</button>
-            </div>
+            </form>
             <ul id="songs">
               <li draggable="true" ondragover="return false" ng-repeat="song in list" ng-attr-data-index="{{$index}}" class="song-item round-list">
                 <div class="song-controls">

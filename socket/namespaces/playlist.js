@@ -120,6 +120,11 @@ module.exports = function(io) {
     // Event to leave all rooms and join the one given if authorized
     socket.on('join', function (data) {
 
+      playlistNSP.to(socket.rooms[0]).emit('user-action', {
+        username: socket.username,
+        action: 'join'
+      });
+
       // Store data from promises below here.
       // Not in 'data' because it comes from the user and would
       // require cleaning.
@@ -310,6 +315,11 @@ module.exports = function(io) {
     ==========================================================================*/
     socket.on('add', function (data) {
       getPlaylist(socket).then(function(playlist){
+
+        playlistNSP.to(socket.rooms[0]).emit('user-action', {
+          username: socket.username,
+          action: 'add'
+        });
         //======================================================================
         //                          Validate Data
         //======================================================================
@@ -366,9 +376,7 @@ module.exports = function(io) {
 
           // Create state to send to client
           var playlistState = {
-            list: playlist.playlist,
-            isPlaying: playlist.isPlaying,
-            nowPlaying: playlist.nowPlaying
+            list: playlist.playlist
           };
 
           // Send state to client
@@ -392,6 +400,11 @@ module.exports = function(io) {
     ==========================================================================*/
     socket.on('play-pause', function (data) {
       getPlaylist(socket).then(function(playlist){
+
+        playlistNSP.to(socket.rooms[0]).emit('user-action', {
+          username: socket.username,
+          action: 'play-pause'
+        });
         //======================================================================
         //                          Validate Data
         //======================================================================
@@ -450,6 +463,12 @@ module.exports = function(io) {
     ==========================================================================*/
     socket.on('transport', function (data) {
       getPlaylist(socket).then(function(playlist){
+
+        playlistNSP.to(socket.rooms[0]).emit('user-action', {
+          username: socket.username,
+          action: 'transport'
+        });
+
         //======================================================================
         //                          Validate Data
         //======================================================================
@@ -460,7 +479,7 @@ module.exports = function(io) {
             message: 'Playlist not found.'
           });
         }
-        if (typeof data.time !== 'number' || data.time <= 0) {
+        if (typeof data.time !== 'number' || data.time < 0) {
           return socket.emit('playlist-error', {
             success: false,
             message: 'Invalid time sent.'
@@ -500,6 +519,11 @@ module.exports = function(io) {
     socket.on('move', function (data) {
       var fromTo = data.fromTo;
       getPlaylist(socket).then(function(playlist){
+
+        playlistNSP.to(socket.rooms[0]).emit('user-action', {
+          username: socket.username,
+          action: 'move'
+        });
         //======================================================================
         //                          Validate Data
         //======================================================================
@@ -580,6 +604,11 @@ module.exports = function(io) {
     ==========================================================================*/
     socket.on('change', function (data) {
       getPlaylist(socket).then(function(playlist){
+
+        playlistNSP.to(socket.rooms[0]).emit('user-action', {
+          username: socket.username,
+          action: 'change'
+        });
         //======================================================================
         //                          Validate Data
         //======================================================================

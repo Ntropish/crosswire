@@ -139,7 +139,7 @@ html
 
         div#list-player-holder(ng-show="room")
           div#song-list
-            div#song-adder
+            form#song-adder
               input(type="text" ng-model="urlToAdd" placeholder="SoundCloud URL")
               button(ng-click="actions.add(urlToAdd)") Add
             ul#songs

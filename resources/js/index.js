@@ -101,6 +101,9 @@ angular.module('index', [])
     // This flag is checked when a playlist-state event updates the time so that
     // time updates (calling SCcorrectTime function) can rely on this condition
     var timeUpdated = false;
+    // This flag is set upon SC widget FINISH event to ignore seek event
+    // caused by the end of the song
+    var ignoreSongEndingSeek = false;
 
     // DOM element that shows messages to the user
     var alertBox = $('#alert-box');
@@ -141,34 +144,54 @@ angular.module('index', [])
     });
 
     SCwidget.bind(SC.Widget.Events.PAUSE, function(data){
-
-
       // CHeck if event needs to be sent
       if ($scope.isPlaying) {
 
-        // Send pause event
-        var sendData = {
-          token: $scope.token,
-          isPlaying: false,
-          time: data.currentPosition
-        };
+        SCwidget.getDuration(function(duration){
+          if (data.currentPosition - 5 <= duration) {
+            // This condition ignores pauses upon song ending
+            return;
+          }
 
-        playlistSocket.emit('play-pause', sendData);
+          // Send pause event
+          var sendData = {
+            token: $scope.token,
+            isPlaying: false,
+            time: data.currentPosition
+          };
+
+          playlistSocket.emit('play-pause', sendData);
+        });
       }
     });
 
     SCwidget.bind(SC.Widget.Events.SEEK, function(data){
       // Send current position on a transport event
+
       var sendData = {token: $scope.token, time: data.currentPosition};
       playlistSocket.emit('transport', sendData);
     });
 
     SCwidget.bind(SC.Widget.Events.FINISH, function(data){
       // If not the last song, skip to the next
-      if ($scope.nowPlaying < $scope.list.length -1) {
-        var sendData = {token: $scope.token, songIndex: $scope.nowPlaying + 1, isPlaying: true};
-        playlistSocket.emit('change', sendData);
+      // Make the data to send, THEN validate the song is at the end
+      // before sending to avoid duplicate forward skips upon song end.
+
+
+      if ($scope.nowPlaying > $scope.list.length - 1) {
+        return;
       }
+      if ($scope.currentSongDomain === 'soundcloud' &&
+        $scope.nowPlaying > SCwidget.nowPlaying) {
+          // Do nothing if a new song has alrady been loaded
+          return;
+        }
+
+      var sendData = {token: $scope.token, songIndex: $scope.nowPlaying + 1, isPlaying: true};
+
+      playlistSocket.emit('change', sendData);
+
+
     });
 
     //==========================================================================
@@ -302,10 +325,12 @@ angular.module('index', [])
         };
 
         var songUrl = $scope.currentSong.url;
-
+        SCwidget.nowPlaying = $scope.nowPlaying;
         SCwidget.load(songUrl, options);
 
+
       };
+
 
       if ($scope.currentSongDomain === 'soundcloud') {
         loadSC();
@@ -343,6 +368,10 @@ angular.module('index', [])
     //==========================================================================
     // SOCKET.IO EVENT HANDLERS
     //==========================================================================
+
+    playlistSocket.on('user-action', function(data){
+      console.log('User', data.username, 'attempted', data.action);
+    });
 
     playlistSocket.on('permission-update', function(data){
       if (typeof data.join === 'number') $scope.permissions.join = data.join;
@@ -549,10 +578,14 @@ angular.module('index', [])
         return;
       }
 
+      // Immediately remove url from model
+      $scope.urlToAdd = '';
+
+      // Otherwise check soundcloud api for validity
       SCgetTitle(url).then(function(title){
         var sendData = {token: $scope.token, url: url, title: title};
         playlistSocket.emit('add', sendData);
-        $scope.urlToAdd = '';
+
       }, function(err) {
         displayMessage('Couldn\'t find that song');
       });
