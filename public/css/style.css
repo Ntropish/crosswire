@@ -404,7 +404,7 @@ button {
   .volume-control > i {
     flex: 0 0 1em; }
   .volume-control > input {
-    flex: 1 2 5em;
+    flex: 1 2 3em;
     margin: 0; }
 
 #song-adder {
@@ -515,7 +515,8 @@ button {
     right: 1em;
     top: 0.5em; }
     .media-controller-console > .volume-control {
-      flex: 0 0 8em; }
+      flex: 1 1 5em;
+      overflow: hidden; }
     .media-controller-console > button {
       flex: 0 0 2em; }
   #current-song-title {
