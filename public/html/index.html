@@ -6,139 +6,139 @@
     <link href="https://fonts.googleapis.com/css?family=Sarala:400,700" rel="stylesheet" type="text/css">
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans:400,300">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
-    <script src="https://www.google.com/recaptcha/api.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js" type="text/javascript"></script>
+    <script src="https://cdn.socket.io/socket.io-1.3.5.js" type="text/javascript"></script>
+    <script src="https://w.soundcloud.com/player/api.js" type="text/javascript"></script>
+    <script src="https://connect.soundcloud.com/sdk-2.0.0.js" type="text/javascript"></script>
+    <script src="https://www.google.com/recaptcha/api.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js" type="text/javascript"></script>
+    <script src="js/index.js" type="text/javascript"></script>
   </head>
-  <body ng-app="index" ng-controller="SongShareCtrl as controller">
-    <div id="alert-box" ng-class="{'alert-flash': showAlert }"> </div>
-    <section id="header">
-      <h2> <strong>cross</strong>wire</h2>
-      <div id="room-joiner">
-        <input type="text" ng-model="desiredRoom" placeholder="Room">
-        <button ng-click="actions.join(desiredRoom)">Join</button>
-      </div>
-      <button id="you-button" ng-click="showUserBox = !showUserBox; flashYouButton = false" ng-class="{'flash-you-button': flashYouButton}" ng-cloak class="glow"> 
-        <div>{{ token?"":"Log in!"}}</div><i ng-show="token" ng-class="{'user-expand-symbol': showUserBox, 'user-collapse-symbol': !showUserBox}" style="color: #666" class="fa fa-chevron-right"></i> <i ng-show="token" style="font-size: 2em; color: #666" class="fa fa-bars"></i>
-      </button>
-    </section>
-    <section id="body" ng-cloak>
-      <div id="user" ng-show="showUserBox" ng-cloak>
-        <div id="login-and-registration" ng-show="!token">
-          <div id="login-and-registration-tabs">
-            <button id="login-tab" ng-click="activeTab = 0" ng-class="{'active-tab': activeTab == '0'}" class="tab-button">Login</button>
-            <button id="register-tab" ng-click="activeTab = 1" ng-class="{'active-tab': activeTab == '1'}" class="tab-button">Register</button>
-          </div>
-          <form id="login" ng-show="activeTab === 0">
-            <input type="text" ng-model="username" placeholder="Username" class="login-input">
-            <input type="password" ng-model="password" placeholder="Password" class="login-input">
-            <button id="login-button" ng-click="actions.login(username, password)">Login</button>
-          </form>
-          <form id="register" ng-show="activeTab === 1">
-            <input type="text" ng-model="username" placeholder="Username" class="login-input">
-            <input type="password" ng-model="password" placeholder="Password" class="login-input">
-            <input type="password" ng-model="confirmPassword" placeholder="Confirm" class="login-input">
-            <div data-sitekey="6Lf_SQsTAAAAAMXWN-vZFzrxKcFXgfsXJs7V1QeO" class="g-recaptcha"></div>
-            <button id="register-button" ng-click="actions.register(username, password)">Register</button>
-          </form>
-        </div>
-        <div id="user-panel" ng-show="token">
-          <div id="user-tabs">
-            <button id="user-tab" ng-class="{'active-user-tab': activeUserTab === 0}" ng-click="activeUserTab = 0" class="user-tab">You</button>
-            <button id="friend-tab" ng-class="{'active-user-tab': activeUserTab === 1}" ng-click="activeUserTab = 1" class="user-tab">Friends</button>
-            <button id="room-tab" ng-class="{'active-user-tab': activeUserTab === 2}" ng-click="activeUserTab = 2" class="user-tab">Room</button>
-          </div>
-          <div id="user-section" ng-show="activeUserTab === 0">
-            <h4>{{ loggedInUsername }}</h4>
-            <button id="make-room" ng-click="actions.join(loggedInUsername)" ng-show="room !== loggedInUsername">Join Your Room</button>
-            <button id="log-out" ng-click="actions.logout()">Logout</button>
-          </div>
-          <div id="friend-section" ng-show="activeUserTab === 1">
-            <form id="friend-adder">
-              <input type="text" ng-model="friendName" placeholder="Name">
-              <button ng-click="actions.addFriend(friendName)"><i class="fa fa-plus"></i></button>
-            </form>
-            <ul class="friend-list">
-              <li ng-repeat="friend in friends" class="friend round-list">{{ friend }}
-                <button ng-click="actions.removeFriend($index)"><i class="fa fa-times"></i></button>
-              </li>
-            </ul>
-          </div>
-          <div id="room-section" ng-show="activeUserTab === 2 &amp;&amp; room">
-            <div id="room-title">{{ room }} room</div>
-            <ul class="room-user-list">
-              <li ng-repeat="user in userlist" class="room-user round-list">{{ user }}</li>
-            </ul>
-            <div id="room-permissions">
-              <h3>Permissions</h3>
-              <div class="permission"> 
-                <div title="Join playlist">Join</div>
-                <button ng-class="{'selected-option': permissions.join === 0}" ng-click="actions.updatePermissions({join: 0})" ng-disabled="room !== loggedInUsername">Owner</button>
-                <button ng-class="{'selected-option': permissions.join === 1}" ng-click="actions.updatePermissions({join: 1})" ng-disabled="room !== loggedInUsername">Friends</button>
-                <button ng-class="{'selected-option': permissions.join === 2}" ng-click="actions.updatePermissions({join: 2})" ng-disabled="room !== loggedInUsername">All</button>
-              </div>
-              <div class="permission">
-                <div title="Add songs">Add</div>
-                <button ng-class="{'selected-option': permissions.add === 0}" ng-click="actions.updatePermissions({add: 0})" ng-disabled="room !== loggedInUsername">Owner</button>
-                <button ng-class="{'selected-option': permissions.add === 1}" ng-click="actions.updatePermissions({add: 1})" ng-disabled="room !== loggedInUsername">Friends</button>
-                <button ng-class="{'selected-option': permissions.add === 2}" ng-click="actions.updatePermissions({add: 2})" ng-disabled="room !== loggedInUsername">All</button>
-              </div>
-              <!--div.permission-->
-              <!--  div(title="Modify playlist") Mod-->
-              <!--  button(ng-class="{'selected-option': permissions.modify === 0}") Owner-->
-              <!--  button(ng-class="{'selected-option': permissions.modify === 1}") Friends-->
-              <!--  button(ng-class="{'selected-option': permissions.modify === 2}") All-->
-            </div>
-            <button ng-click="actions.leave()" class="leave-room">Leave</button>
-          </div>
-        </div>
-      </div>
-      <div id="container" ng-cloak ng-class="{'container-collapse': showUserBox}">
-        <div id="media-controller" ng-show="room">
-          <div id="current-song-title"> <span ng-show="currentSong.title" ng-class="{'scroll-title':scrollConsoleTitle}" data-offset="-500">  {{ currentSong.title }}</span></div>
-          <div class="media-controller-console">
-            <button ng-click="actions.playPause(true)"> <i class="fa fa-play"></i></button>
-            <button ng-click="actions.playPause(false)"><i class="fa fa-pause"></i></button>
-            <button ng-click="actions.change(nowPlaying - 1)"><i class="fa fa-step-backward"></i></button>
-            <button ng-click="actions.change(nowPlaying + 1)"><i class="fa fa-step-forward"> </i></button>
-            <div class="volume-control"><i ng-show="volume &lt; 10" class="volume-icon fa fa-volume-off"></i><i ng-show="volume &gt;= 10 &amp;&amp; volume &lt;= 90" class="volume-icon fa fa-volume-down"></i><i ng-show="volume &gt; 90" class="volume-icon fa fa-volume-up"></i>
-              <input ng-model="volume" type="range" minimum="0" maximum="100" ng-change="actions.updateVolume()">
-            </div>
-          </div>
-        </div>
-        <div id="list-player-holder" ng-show="room">
-          <div id="song-list">
-            <form id="song-adder">
-              <input type="text" ng-model="urlToAdd" placeholder="SoundCloud URL">
-              <button ng-click="actions.add(urlToAdd)">Add</button>
-            </form>
-            <ul id="songs">
-              <li draggable="true" ondragover="return false" ng-repeat="song in list" ng-attr-data-index="{{$index}}" class="song-item round-list">
-                <div class="song-controls">
-                  <div title="Move song" class="move-this-song"><i class="fa fa-ellipsis-v"></i></div>
-                  <button title="Change to this song" ng-click="actions.change($index)" class="change-song"><i ng-class="{'current-song':$index === nowPlaying}" class="fa fa-arrow-right"></i></button>
-                </div><span class="song-name">{{ song.title }}</span>
-                <button ng-click="actions.remove($index)"><i class="fa fa-times"></i></button>
-              </li>
-            </ul>
-          </div>
-          <div id="player-container" ng-show="currentSongDomain">
-            <iframe id="SCwidget" width="100%" height="100%" scrolling="no" frameborder="no" src="https://w.soundcloud.com/player/?url=none" class="iframe"></iframe>
-          </div>
-        </div>
-        <div id="landing-message" ng-show="!room">
-          <h2>Welcome to crosswire</h2>
-          <p>
-            Sign in, join a playlist, or make 
-            one to share with friends!
-          </p>
-        </div>
-      </div>
-    </section>
-    <div id="hidden" ng-show="false"><span id="text-width-calc"></span></div>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
-    <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-    <script src="https://w.soundcloud.com/player/api.js"></script>
-    <script src="//connect.soundcloud.com/sdk-2.0.0.js"></script>
-    <script src="js/index.js"></script>
-  </body>
 </html>
+<body ng-app="index" ng-controller="SongShareCtrl as controller">
+  <div id="alert-box" ng-class="{'alert-flash': showAlert }"> </div>
+  <section id="header">
+    <h2> <strong>cross</strong>wire</h2>
+    <div id="room-joiner">
+      <input type="text" ng-model="desiredRoom" placeholder="Room">
+      <button ng-click="actions.join(desiredRoom)">Join</button>
+    </div>
+    <button id="you-button" ng-click="showUserBox = !showUserBox" ng-cloak class="glow"> 
+      <div id="you-button-container"><span>{{ token?"":"Log in!"}}</span><i ng-show="token" ng-class="{'user-expand-symbol': showUserBox, 'user-collapse-symbol': !showUserBox}" style="color: #666" class="fa fa-chevron-right"></i> <i ng-show="token" style="font-size: 2em; color: #666" class="fa fa-bars"></i></div>
+    </button>
+  </section>
+  <section id="body" ng-cloak>
+    <div id="user" ng-show="showUserBox" ng-cloak>
+      <div id="login-and-registration" ng-show="!token">
+        <div id="login-and-registration-tabs">
+          <button id="login-tab" ng-click="activeTab = 0" ng-class="{'active-tab': activeTab == '0'}" class="tab-button">Login</button>
+          <button id="register-tab" ng-click="activeTab = 1" ng-class="{'active-tab': activeTab == '1'}" class="tab-button">Register</button>
+        </div>
+        <form id="login" ng-show="activeTab === 0">
+          <input type="text" ng-model="username" placeholder="Username" class="login-input">
+          <input type="password" ng-model="password" placeholder="Password" class="login-input">
+          <button id="login-button" ng-click="actions.login(username, password)">Login</button>
+        </form>
+        <form id="register" ng-show="activeTab === 1">
+          <input type="text" ng-model="username" placeholder="Username" class="login-input">
+          <input type="password" ng-model="password" placeholder="Password" class="login-input">
+          <input type="password" ng-model="confirmPassword" placeholder="Confirm" class="login-input">
+          <div data-sitekey="6Lf_SQsTAAAAAMXWN-vZFzrxKcFXgfsXJs7V1QeO" class="g-recaptcha"></div>
+          <button id="register-button" ng-click="actions.register(username, password)">Register</button>
+        </form>
+      </div>
+      <div id="user-panel" ng-show="token">
+        <div id="user-tabs">
+          <button id="user-tab" ng-class="{'active-user-tab': activeUserTab === 0}" ng-click="activeUserTab = 0" class="user-tab">You</button>
+          <button id="friend-tab" ng-class="{'active-user-tab': activeUserTab === 1}" ng-click="activeUserTab = 1" class="user-tab">Friends</button>
+          <button id="room-tab" ng-class="{'active-user-tab': activeUserTab === 2}" ng-click="activeUserTab = 2" class="user-tab">Room</button>
+        </div>
+        <div id="user-section" ng-show="activeUserTab === 0">
+          <h4>{{ loggedInUsername }}</h4>
+          <button id="make-room" ng-click="actions.join(loggedInUsername)" ng-show="room !== loggedInUsername">Join Your Room</button>
+          <button id="log-out" ng-click="actions.logout()">Logout</button>
+        </div>
+        <div id="friend-section" ng-show="activeUserTab === 1">
+          <form id="friend-adder">
+            <input type="text" ng-model="friendName" placeholder="Name">
+            <button ng-click="actions.addFriend(friendName)"><i class="fa fa-plus"></i></button>
+          </form>
+          <ul class="friend-list">
+            <li ng-repeat="friend in friends" class="friend round-list">{{ friend }}
+              <button ng-click="actions.removeFriend($index)"><i class="fa fa-times"></i></button>
+            </li>
+          </ul>
+        </div>
+        <div id="room-section" ng-show="activeUserTab === 2 &amp;&amp; room">
+          <div id="room-title">{{ room }} room</div>
+          <ul class="room-user-list">
+            <li ng-repeat="user in userlist" class="room-user round-list">{{ user }}</li>
+          </ul>
+          <div id="room-permissions">
+            <h3>Permissions</h3>
+            <div class="permission"> 
+              <div title="Join playlist">Join</div>
+              <button ng-class="{'selected-option': permissions.join === 0}" ng-click="actions.updatePermissions({join: 0})" ng-disabled="room !== loggedInUsername">Owner</button>
+              <button ng-class="{'selected-option': permissions.join === 1}" ng-click="actions.updatePermissions({join: 1})" ng-disabled="room !== loggedInUsername">Friends</button>
+              <button ng-class="{'selected-option': permissions.join === 2}" ng-click="actions.updatePermissions({join: 2})" ng-disabled="room !== loggedInUsername">All</button>
+            </div>
+            <div class="permission">
+              <div title="Add songs">Add</div>
+              <button ng-class="{'selected-option': permissions.add === 0}" ng-click="actions.updatePermissions({add: 0})" ng-disabled="room !== loggedInUsername">Owner</button>
+              <button ng-class="{'selected-option': permissions.add === 1}" ng-click="actions.updatePermissions({add: 1})" ng-disabled="room !== loggedInUsername">Friends</button>
+              <button ng-class="{'selected-option': permissions.add === 2}" ng-click="actions.updatePermissions({add: 2})" ng-disabled="room !== loggedInUsername">All</button>
+            </div>
+            <!--div.permission-->
+            <!--  div(title="Modify playlist") Mod-->
+            <!--  button(ng-class="{'selected-option': permissions.modify === 0}") Owner-->
+            <!--  button(ng-class="{'selected-option': permissions.modify === 1}") Friends-->
+            <!--  button(ng-class="{'selected-option': permissions.modify === 2}") All-->
+          </div>
+          <button ng-click="actions.leave()" class="leave-room">Leave</button>
+        </div>
+      </div>
+    </div>
+    <div id="container" ng-cloak ng-class="{'container-collapse': showUserBox}">
+      <div id="media-controller" ng-show="room">
+        <div id="current-song-title"> <span ng-show="currentSong.title" ng-class="{'scroll-title':scrollConsoleTitle}" data-offset="-500">  {{ currentSong.title }}</span></div>
+        <div class="media-controller-console">
+          <button ng-click="actions.playPause(true)"> <i class="fa fa-play"></i></button>
+          <button ng-click="actions.playPause(false)"><i class="fa fa-pause"></i></button>
+          <button ng-click="actions.change(nowPlaying - 1)"><i class="fa fa-step-backward"></i></button>
+          <button ng-click="actions.change(nowPlaying + 1)"><i class="fa fa-step-forward"> </i></button>
+          <div class="volume-control"><i ng-show="volume &lt; 10" class="volume-icon fa fa-volume-off"></i><i ng-show="volume &gt;= 10 &amp;&amp; volume &lt;= 90" class="volume-icon fa fa-volume-down"></i><i ng-show="volume &gt; 90" class="volume-icon fa fa-volume-up"></i>
+            <input ng-model="volume" type="range" minimum="0" maximum="100" ng-change="actions.updateVolume()">
+          </div>
+        </div>
+      </div>
+      <div id="list-player-holder" ng-show="room">
+        <div id="song-list">
+          <form id="song-adder">
+            <input type="text" ng-model="urlToAdd" placeholder="SoundCloud URL">
+            <button ng-click="actions.add(urlToAdd)">Add</button>
+          </form>
+          <ul id="songs">
+            <li draggable="true" ondragover="return false" ng-repeat="song in list" ng-attr-data-index="{{$index}}" class="song-item round-list">
+              <div class="song-controls">
+                <div title="Move song" class="move-this-song"><i class="fa fa-ellipsis-v"></i></div>
+                <button title="Change to this song" ng-click="actions.change($index)" class="change-song"><i ng-class="{'current-song':$index === nowPlaying}" class="fa fa-arrow-right"></i></button>
+              </div><span class="song-name">{{ song.title }}</span>
+              <button ng-click="actions.remove($index)"><i class="fa fa-times"></i></button>
+            </li>
+          </ul>
+        </div>
+        <div id="player-container" ng-show="currentSongDomain">
+          <iframe id="SCwidget" width="100%" height="100%" scrolling="no" frameborder="no" src="https://w.soundcloud.com/player/?url=none" class="iframe"></iframe>
+        </div>
+      </div>
+      <div id="landing-message" ng-show="!room">
+        <h2>Welcome to crosswire</h2>
+        <p>
+          Sign in, join a playlist, or make 
+          one to share with friends!
+        </p>
+      </div>
+    </div>
+  </section>
+  <div id="hidden" ng-show="false"><span id="text-width-calc"></span></div>
+</body>

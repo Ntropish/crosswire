@@ -1,4 +1,6 @@
-
+$(document).ready(function(){
+  
+});
 angular.module('index', [])
   .controller('SongShareCtrl', ['$scope', function($scope){
     // User variables
