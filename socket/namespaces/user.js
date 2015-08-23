@@ -130,6 +130,9 @@ module.exports = function(io) {
                     // attept login before user is in database
                     socket.emit('register-result', result);
                   });
+                } else {
+                  socket.emit('register-result', {success: false,
+                  message: 'You didn\t get the recaptcha right.'});
                 }
               });
             });
