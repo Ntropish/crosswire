@@ -238,7 +238,6 @@ angular.module('index', [])
       var YTdomains = [];
 
       var domain = newSong.url.split('/')[2];
-      console.log('domain:', domain);
 
       // Check if domain is in the valid domain
       // lists and set current song domain
@@ -258,9 +257,7 @@ angular.module('index', [])
     var SCcorrectTime = function SCcurrectTime() {
       // Seek SoundCloud widget to current time if difference is > 1 second
       SCwidget.getPosition(function(position){
-        console.log('looking to correct time', position, 'to', $scope.time);
         if (Math.abs(position - $scope.time) > 1000) {
-          console.log('correcting to', $scope.time);
           SCwidget.seekTo($scope.time);
         }
       });
@@ -270,7 +267,6 @@ angular.module('index', [])
         // Return a promise that resolves with a title
         return new Promise(function(resolve, reject){
           SC.get('/resolve', { url: songUrl}, function(track) {
-            console.log(track);
             if (track.kind === 'track') {
               resolve(track.user.username+' - '+track.title);
             } else {
@@ -377,7 +373,6 @@ angular.module('index', [])
       if (typeof data.join === 'number') $scope.permissions.join = data.join;
       if (typeof data.add === 'number') $scope.permissions.add = data.add;
       if (typeof data.modify === 'number') $scope.permissions.modify = data.modify;
-      console.log($scope.permissions);
       $scope.$apply();
     });
 
@@ -398,7 +393,6 @@ angular.module('index', [])
     });
 
     playlistSocket.on('time-request', function(){
-      console.log('GOT TIME REQUEST');
 
       // Use ignore request condition
       if (timeRequestIgnore) {
@@ -407,8 +401,6 @@ angular.module('index', [])
 
       if ($scope.currentSongDomain === 'soundcloud') {
         SCwidget.getPosition(function(position){
-          console.log('sending time response:');
-          console.log(position);
           playlistSocket.emit('time-response', {time: position});
         });
       }
@@ -470,7 +462,6 @@ angular.module('index', [])
 
       // Sync time==============================================================
       if (typeof playlistState.time === 'number') {
-        console.log('changing time to', playlistState.time);
         $scope.time = playlistState.time;
         timeUpdated = true;
       }
@@ -594,7 +585,6 @@ angular.module('index', [])
 
     actions.remove = function remove(index) {
       // Use the move action to move the song out of the playlist
-      console.log('removing:', index);
       var sendData = {token: $scope.token, fromTo: {from: index, to: -1}};
       playlistSocket.emit('move', sendData);
     };
@@ -670,7 +660,6 @@ angular.module('index', [])
     };
 
     actions.removeFriend = function removeFriend(index) {
-      console.log($scope.friends[index]);
       var data = {token: $scope.token, friendNoMore: $scope.friends[index] };
       userSocket.emit('remove-friend', data);
     };
