@@ -1,5 +1,5 @@
 $(document).ready(function(){
-  
+
 });
 angular.module('index', [])
   .controller('SongShareCtrl', ['$scope', function($scope){
@@ -170,6 +170,13 @@ angular.module('index', [])
     SCwidget.bind(SC.Widget.Events.SEEK, function(data){
       // Send current position on a transport event
 
+      // Ignore seeking to start of the song
+      // This case should only happen when caused by the widget
+      // at song end, so ignore it
+      if (data.relativePosition === 0 && data.currentPosition === 0) {
+        return;
+      }
+
       var sendData = {token: $scope.token, time: data.currentPosition};
       playlistSocket.emit('transport', sendData);
     });
@@ -179,8 +186,7 @@ angular.module('index', [])
       // Make the data to send, THEN validate the song is at the end
       // before sending to avoid duplicate forward skips upon song end.
 
-
-      if ($scope.nowPlaying > $scope.list.length - 1) {
+      if ($scope.nowPlaying >= $scope.list.length - 1) {
         return;
       }
       if ($scope.currentSongDomain === 'soundcloud' &&
