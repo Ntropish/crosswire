@@ -18,6 +18,8 @@ module.exports = function (mongoose) {
         joinPermission: {type: Number, 'default': 1, required: true},
         // 0 - only owner can add songs, 1 - friends, 2 - anyone
         addPermission: {type: Number, 'default': 1, required: true},
+        // 0 - only owner can modify playlist, 1 - friends, 2 - anyone
+        modifyPermission: {type: Number, 'default': 1, required: true},
         // Track all users connected
         userlist: [String]
 

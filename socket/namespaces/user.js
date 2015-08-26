@@ -13,8 +13,6 @@ module.exports = function(io) {
 
   userNSP.use(function(socket, next){
 
-
-
     // Use JWT middleware
     require('../authenticate-token.js')(socket);
 
@@ -168,6 +166,7 @@ module.exports = function(io) {
     });
 
     socket.on('authenticate', function(data){
+      console.log('authing');
       // Check for lack of username.
       if (!data.username) {
         socket.emit('authenticate-result', {

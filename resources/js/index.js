@@ -150,7 +150,7 @@ angular.module('index', [])
       if ($scope.isPlaying) {
 
         SCwidget.getDuration(function(duration){
-          if (data.currentPosition - 5 <= duration) {
+          if (data.currentPosition - 5 >= duration) {
             // This condition ignores pauses upon song ending
             return;
           }
@@ -177,8 +177,18 @@ angular.module('index', [])
         return;
       }
 
-      var sendData = {token: $scope.token, time: data.currentPosition};
-      playlistSocket.emit('transport', sendData);
+      SCwidget.getPosition(function(position){
+        // Don't send time if already synced within a second
+        if (Math.abs(position - $scope.time) < 1000) {
+          return;
+        }
+
+        var sendData = {token: $scope.token, time: data.currentPosition};
+        playlistSocket.emit('transport', sendData);
+
+      });
+
+
     });
 
     SCwidget.bind(SC.Widget.Events.FINISH, function(data){
@@ -349,21 +359,18 @@ angular.module('index', [])
         // Match play/pause states
         SCwidget.isPaused(function(isPaused){
 
+          SCcorrectTime();
+
           // If widget is paused put playlist state isn't, play widget
           if (isPaused && $scope.isPlaying) {
             SCwidget.play();
-            SCcorrectTime();
           }
 
           // If widget is playing but playlist state isn't, pause widget
           else if (!isPaused && !$scope.isPlaying) {
-            SCcorrectTime();
             SCwidget.pause();
           }
 
-          else if (!isPaused && timeUpdated) {
-            SCcorrectTime();
-          }
         });
 
       }

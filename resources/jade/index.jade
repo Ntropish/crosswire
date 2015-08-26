@@ -115,11 +115,17 @@ body(ng-app="index" ng-controller="SongShareCtrl as controller")
                   ng-click="actions.updatePermissions({add: 2})"
                   ng-disabled="room !== loggedInUsername"
                   ) All
-              //div.permission
-              //  div(title="Modify playlist") Mod
-              //  button(ng-class="{'selected-option': permissions.modify === 0}") Owner
-              //  button(ng-class="{'selected-option': permissions.modify === 1}") Friends
-              //  button(ng-class="{'selected-option': permissions.modify === 2}") All
+              div.permission
+                div(title="Modify playlist") Mod
+                button(ng-class="{'selected-option': permissions.modify === 0}"
+                ng-click="actions.updatePermissions({modify: 0})"
+                ng-disabled="room !== loggedInUsername") Owner
+                button(ng-class="{'selected-option': permissions.modify === 1}"
+                ng-click="actions.updatePermissions({modify: 1})"
+                ng-disabled="room !== loggedInUsername") Friends
+                button(ng-class="{'selected-option': permissions.modify === 2}"
+                ng-click="actions.updatePermissions({modify: 2})"
+                ng-disabled="room !== loggedInUsername") All
             button.leave-room(ng-click="actions.leave()") Leave
 
     

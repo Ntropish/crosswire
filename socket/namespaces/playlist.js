@@ -19,14 +19,14 @@ module.exports = function(io) {
     }
 
     // Beyond this point only users can be authorized so reject non users now
-    if (user === undefined) {
+    if (user === undefined || user === null) {
       return Promise.reject('You must be logged in to do that.');
     }
 
     // Only friends are authorized
     else if (playlist[permission] === 1) {
-
       if (playlist.owner === user.username) {
+
         return Promise.resolve(true);
       }
       return User.findOne({username: playlist.owner}).exec().then(function (owner) {
@@ -50,6 +50,7 @@ module.exports = function(io) {
     }
     // User is not authorized if the previous cases didn't match
     else {
+
       return Promise.resolve(false);
     }
   };
@@ -298,11 +299,14 @@ module.exports = function(io) {
             playlist.modifyPermission = data.modify;
           }
           playlist.save();
-          playlistNSP.to(socket.username).emit('permission-update', {
-            join: playlist.joinPermission,
-            add: playlist.addPermission,
-            modify: playlist.modifyPermission
-          });
+
+          var newPermissions = {
+            join: data.join,
+            add: data.add,
+            modify: data.modify
+          };
+
+          playlistNSP.to(socket.username).emit('permission-update', newPermissions);
         });
     }, function(err){
       console.log(err);
@@ -401,10 +405,7 @@ module.exports = function(io) {
     socket.on('play-pause', function (data) {
       getPlaylist(socket).then(function(playlist){
 
-        playlistNSP.to(socket.rooms[0]).emit('user-action', {
-          username: socket.username,
-          action: 'play-pause'
-        });
+
         //======================================================================
         //                          Validate Data
         //======================================================================
@@ -433,23 +434,61 @@ module.exports = function(io) {
         //                          Perform Action
         //======================================================================
 
-        // Construct state
-        var playlistState = {
-          list: playlist.playlist,
-          isPlaying: data.isPlaying,
-          nowPlaying: playlist.nowPlaying,
-          time: data.time
-        };
 
-        // Send state to clients
-        playlistNSP.to(socket.rooms[0]).emit('playlist-state', playlistState);
 
-        // Save state to database
-        if (typeof data.time === 'number') {
-          playlist.time = data.time;
-        }
-        playlist.isPlaying = data.isPlaying;
-        playlist.save().catch(handleError);
+        [
+            // Get user
+            function() {
+              return User.findOne({username: socket.username}).exec();
+            },
+
+            // Authorize user
+            function(user){
+              return authorize(playlist, user, 'modifyPermission');
+            },
+
+            // Check authorization
+            function(isAuthorized){
+              if (isAuthorized) {
+                return Promise.resolve();
+              }
+              return Promise.reject('You aren\'t authorized to do that');
+            }
+        ]
+        .reduce(function(previous, returnPromise) {
+          return previous.then(returnPromise);
+        }, Promise.resolve())
+        .then(function () {
+          playlistNSP.to(socket.rooms[0]).emit('user-action', {
+            username: socket.username,
+            action: 'play-pause'
+          });
+
+          // Construct state
+          var playlistState = {
+            list: playlist.playlist,
+            isPlaying: data.isPlaying,
+            nowPlaying: playlist.nowPlaying,
+            time: data.time
+          };
+
+          // Send state to clients
+          playlistNSP.to(socket.rooms[0]).emit('playlist-state', playlistState);
+
+          // Save state to database
+          if (typeof data.time === 'number') {
+            playlist.time = data.time;
+          }
+          playlist.isPlaying = data.isPlaying;
+          playlist.save().catch(handleError);
+
+
+        }, function(reason){
+          return socket.emit('playlist-error', {
+            success: false,
+            message: reason
+          });
+        });
 
       });
     });
@@ -464,10 +503,7 @@ module.exports = function(io) {
     socket.on('transport', function (data) {
       getPlaylist(socket).then(function(playlist){
 
-        playlistNSP.to(socket.rooms[0]).emit('user-action', {
-          username: socket.username,
-          action: 'transport'
-        });
+
 
         //======================================================================
         //                          Validate Data
@@ -489,21 +525,43 @@ module.exports = function(io) {
         //                          Perform Action
         //======================================================================
 
-        // Create playlist state
-        var playlistState = {
-          list: playlist.playlist,
-          isPlaying: playlist.isPlaying,
-          nowPlaying: playlist.nowPlaying,
-          time: data.time
-        };
+        User.findOne({username: socket.username}, function(err, user){
+          if (err) {
+            console.log(err);
+            return;
+          }
+          authorize(playlist, user, 'modifyPermission').then(function(isAuthorized){
+            if (isAuthorized) {
+
+              playlistNSP.to(socket.rooms[0]).emit('user-action', {
+                username: socket.username,
+                action: 'transport'
+              });
+
+              // Create playlist state
+              var playlistState = {
+                list: playlist.playlist,
+                isPlaying: playlist.isPlaying,
+                nowPlaying: playlist.nowPlaying,
+                time: data.time
+              };
+
+              // Send state to clients
+              playlistNSP.to(socket.rooms[0]).emit('playlist-state', playlistState);
+
+              // Save state to database
+              playlist.time = time;
+              playlist.save().catch(handleError);
+            } else {
+              socket.emit('playlist-error', {
+                success: false,
+                reason:'You aren\'t authorized to do that'});
+            }
+          });
+
+        });
 
 
-        // Send state to clients
-        playlistNSP.to(socket.rooms[0]).emit('playlist-state', playlistState);
-
-        // Save state to database
-        playlist.time = time;
-        playlist.save().catch(handleError);
 
 
       });
@@ -520,10 +578,7 @@ module.exports = function(io) {
       var fromTo = data.fromTo;
       getPlaylist(socket).then(function(playlist){
 
-        playlistNSP.to(socket.rooms[0]).emit('user-action', {
-          username: socket.username,
-          action: 'move'
-        });
+
         //======================================================================
         //                          Validate Data
         //======================================================================
@@ -554,44 +609,65 @@ module.exports = function(io) {
         //                          Perform Action
         //======================================================================
 
-        // Perform array modification
-        var songToMove = playlist.playlist[fromTo.from];
+        User.findOne({username: socket.username}, function(err, user){
+          authorize(playlist, user, 'modifyPermission').then(function(isAuthorized){
+            if (!isAuthorized) {
+              return Promise.reject('You aren\'t authorized to do that');
+            }
 
-        // Perform remove if fromTo.from is a valid index
-        if (fromTo.from > -1) {
-          playlist.playlist.splice(fromTo.from, 1);
-        }
-        // Perform insert
-        if (fromTo.to > -1) {
-          // Insert song
-          playlist.playlist.splice(fromTo.to, 0, songToMove);
-        }
+            playlistNSP.to(socket.rooms[0]).emit('user-action', {
+              username: socket.username,
+              action: 'move'
+            });
 
-        var newNowPlaying = playlist.nowPlaying;
+            // Perform array modification
+            var songToMove = playlist.playlist[fromTo.from];
 
-        // Algorithm to find now now playing index
-        if (newNowPlaying === fromTo.from) {
-          newNowPlaying = fromTo.to;
-        } else {
-          if (newNowPlaying > fromTo.from) {
-            newNowPlaying -= 1;
-          }
+            // Perform remove if fromTo.from is a valid index
+            if (fromTo.from > -1) {
+              playlist.playlist.splice(fromTo.from, 1);
+            }
+            // Perform insert
+            if (fromTo.to > -1) {
+              // Insert song
+              playlist.playlist.splice(fromTo.to, 0, songToMove);
+            }
 
-          if (fromTo.to >= 0 && newNowPlaying >= fromTo.to) {
-            newNowPlaying += 1;
-          }
-        }
+            var newNowPlaying = playlist.nowPlaying;
 
-        playlist.nowPlaying = newNowPlaying;
+            // Algorithm to find now now playing index
+            if (newNowPlaying === fromTo.from) {
+              newNowPlaying = fromTo.to;
+            } else {
+              if (newNowPlaying > fromTo.from) {
+                newNowPlaying -= 1;
+              }
 
-        var playlistState = {
-          list: playlist.playlist,
-          nowPlaying: newNowPlaying
-        };
+              if (fromTo.to >= 0 && newNowPlaying >= fromTo.to) {
+                newNowPlaying += 1;
+              }
+            }
 
-        playlistNSP.to(socket.rooms[0]).emit('playlist-state', playlistState);
+            playlist.nowPlaying = newNowPlaying;
 
-        playlist.save().catch(handleError);
+            var playlistState = {
+              list: playlist.playlist,
+              nowPlaying: newNowPlaying
+            };
+
+            playlistNSP.to(socket.rooms[0]).emit('playlist-state', playlistState);
+
+            playlist.save();
+
+          }).then(undefined, function(reason){
+            return socket.emit('playlist-error', {
+              success: false,
+              message: reason
+            });
+          });
+        });
+
+
       });
     });
 
@@ -605,10 +681,7 @@ module.exports = function(io) {
     socket.on('change', function (data) {
       getPlaylist(socket).then(function(playlist){
 
-        playlistNSP.to(socket.rooms[0]).emit('user-action', {
-          username: socket.username,
-          action: 'change'
-        });
+
         //======================================================================
         //                          Validate Data
         //======================================================================
@@ -650,32 +723,53 @@ module.exports = function(io) {
         //                          Perform Action
         //======================================================================
 
-        // Find what the new song index will be
-        var newSongIndex;
-        if(data.relative){
-          newSongIndex = playlist.nowPlaying + data.songIndex;
-        } else {
-          newSongIndex = data.songIndex;
-        }
+        User.findOne({username: socket.username}, function(err, user){
+          authorize(playlist, user, 'modifyPermission').then(function(isAuthorized){
+            if (!isAuthorized) {
+              return Promise.reject('You aren\'t authorized to do that');
+            }
 
-        // Generate state to send out to clients
-        var playlistState = {
-          list: playlist.playlist,
-          isPlaying: typeof data.isPlaying === 'boolean' ?
-          data.isPlaying :
-          playlist.isPlaying,
+            playlistNSP.to(socket.rooms[0]).emit('user-action', {
+              username: socket.username,
+              action: 'change'
+            });
 
-          nowPlaying: newSongIndex,
-          time: 0
-        };
+            // Find what the new song index will be
+            var newSongIndex;
+            if(data.relative){
+              newSongIndex = playlist.nowPlaying + data.songIndex;
+            } else {
+              newSongIndex = data.songIndex;
+            }
 
-        // Send state out to clients
-        playlistNSP.to(socket.rooms[0]).emit('playlist-state', playlistState);
+            // Generate state to send out to clients
+            var playlistState = {
+              list: playlist.playlist,
+              isPlaying: typeof data.isPlaying === 'boolean' ?
+              data.isPlaying :
+              playlist.isPlaying,
 
-        // Save changes in database
-        playlist.nowPlaying = newSongIndex;
-        playlist.time = 0;
-        playlist.save().catch(handleError);
+              nowPlaying: newSongIndex,
+              time: 0
+            };
+
+            // Send state out to clients
+            playlistNSP.to(socket.rooms[0]).emit('playlist-state', playlistState);
+
+            // Save changes in database
+            playlist.nowPlaying = newSongIndex;
+            playlist.time = 0;
+            playlist.save();
+
+          }).then(undefined, function(reason){
+            return socket.emit('playlist-error', {
+              success: false,
+              message: reason
+            });
+          });
+        });
+
+
       });
 
     });
