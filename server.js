@@ -49,7 +49,7 @@ require('./socket/namespaces/user.js')(io);
 
 //==============================================================================
 //================================MAKE=SERVER===================================
-var httpServer = http.createServer(app); //OPTIONS HERE
+var httpServer = http.createServer(app);
 io.listen(httpServer);
 //================================START=SERVER==================================
 httpServer.listen(port);
