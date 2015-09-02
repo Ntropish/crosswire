@@ -140,7 +140,6 @@ angular.module('index', [])
           token: $scope.token,
           isPlaying: true
         };
-
         playlistSocket.emit('play-pause', sendData);
       }
     });
@@ -150,7 +149,7 @@ angular.module('index', [])
       if ($scope.isPlaying) {
 
         SCwidget.getDuration(function(duration){
-          if (data.currentPosition - 5 >= duration) {
+          if (data.currentPosition - 600 >= duration) {
             // This condition ignores pauses upon song ending
             return;
           }
@@ -359,7 +358,10 @@ angular.module('index', [])
         // Match play/pause states
         SCwidget.isPaused(function(isPaused){
 
-          SCcorrectTime();
+          if (timeUpdated) {
+            SCcorrectTime();
+          }
+
 
           // If widget is paused put playlist state isn't, play widget
           if (isPaused && $scope.isPlaying) {
